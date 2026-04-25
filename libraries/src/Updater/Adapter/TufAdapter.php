@@ -15,7 +15,7 @@ namespace Joomla\CMS\Updater\Adapter;
 
 use Joomla\CMS\Application\ApplicationHelper;
 use Joomla\CMS\Factory;
-use Joomla\CMS\Http\HttpClientFactory;
+use Joomla\CMS\Http\HttpFactoryInterface;
 use Joomla\CMS\Table\Tuf as MetadataTable;
 use Joomla\CMS\Table\Update;
 use Joomla\CMS\TUF\TufFetcher;
@@ -80,7 +80,7 @@ class TufAdapter extends UpdateAdapter
         $metadataTable = new MetadataTable($this->db);
         $metadataTable->load(['update_site_id' => $options['update_site_id']]);
 
-        $tufFetcher = new TufFetcher($metadataTable, $options['location'], $this->db, (new HttpClientFactory())->createHttp(), Factory::getApplication());
+        $tufFetcher = new TufFetcher($metadataTable, $options['location'], $this->db, Factory::getContainer()->get(HttpFactoryInterface::class)->createHttp(), Factory::getApplication());
         $metaData   = $tufFetcher->getValidUpdate();
 
         $metaData = json_decode((string) $metaData, true);

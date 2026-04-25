@@ -9,7 +9,8 @@
 
 namespace Joomla\CMS\Changelog;
 
-use Joomla\CMS\Http\HttpClientFactory;
+use Joomla\CMS\Factory;
+use Joomla\CMS\Http\HttpFactoryInterface;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Log\Log;
 use Joomla\CMS\Object\LegacyPropertyManagementTrait;
@@ -343,7 +344,7 @@ class Changelog
     public function loadFromXml($url)
     {
         try {
-            $http     = (new HttpClientFactory())->createHttp();
+            $http     = Factory::getContainer()->get(HttpFactoryInterface::class)->createHttp();
             $response = $http->get($url);
         } catch (\RuntimeException) {
             $response = null;

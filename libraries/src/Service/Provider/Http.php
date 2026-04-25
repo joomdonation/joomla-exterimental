@@ -11,6 +11,7 @@ namespace Joomla\CMS\Service\Provider;
 
 use Joomla\CMS\Http\HttpClientFactory;
 use Joomla\CMS\Http\HttpFactoryInterface;
+use Joomla\CMS\Version;
 use Joomla\DI\Container;
 use Joomla\DI\ServiceProviderInterface;
 
@@ -41,7 +42,7 @@ class Http implements ServiceProviderInterface
             ->share(
                 HttpFactoryInterface::class,
                 function (Container $container) {
-                    return new HttpClientFactory();
+                    return new HttpClientFactory(new Version(), $container->get('config'));
                 },
                 true
             );

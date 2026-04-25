@@ -11,7 +11,7 @@ namespace Joomla\CMS\Updater;
 
 use Joomla\CMS\Event\Installer\BeforeUpdateSiteDownloadEvent;
 use Joomla\CMS\Factory;
-use Joomla\CMS\Http\HttpClientFactory;
+use Joomla\CMS\Http\HttpFactoryInterface;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Log\Log;
 use Joomla\CMS\Object\LegacyPropertyManagementTrait;
@@ -296,7 +296,7 @@ abstract class UpdateAdapter
 
         // Http transport throws an exception when there's no response.
         try {
-            $http     = (new HttpClientFactory())->createHttp();
+            $http     = Factory::getContainer()->get(HttpFactoryInterface::class)->createHttp();
             $response = $http->get($newUrl, $headers, 20);
         } catch (\RuntimeException) {
             $response = null;

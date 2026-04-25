@@ -12,7 +12,7 @@ namespace Joomla\CMS\Installer;
 use Joomla\Archive\Archive;
 use Joomla\CMS\Event\Installer\BeforePackageDownloadEvent;
 use Joomla\CMS\Factory;
-use Joomla\CMS\Http\HttpClientFactory;
+use Joomla\CMS\Http\HttpFactoryInterface;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Log\Log;
 use Joomla\CMS\Plugin\PluginHelper;
@@ -87,7 +87,7 @@ abstract class InstallerHelper
 
         // Get the file
         try {
-            $response = (new HttpClientFactory())->createHttp()->get($url, $headers);
+            $response = Factory::getContainer()->get(HttpFactoryInterface::class)->createHttp()->get($url, $headers);
         } catch (\RuntimeException $exception) {
             Log::add(Text::sprintf('JLIB_INSTALLER_ERROR_DOWNLOAD_SERVER_CONNECT', $exception->getMessage()), Log::WARNING, 'jerror');
 

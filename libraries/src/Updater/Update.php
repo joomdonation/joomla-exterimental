@@ -11,7 +11,7 @@ namespace Joomla\CMS\Updater;
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Filter\InputFilter;
-use Joomla\CMS\Http\HttpClientFactory;
+use Joomla\CMS\Http\HttpFactoryInterface;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Log\Log;
 use Joomla\CMS\Object\LegacyErrorHandlingTrait;
@@ -551,7 +551,7 @@ class Update
             $metadataTable,
             $url,
             Factory::getContainer()->get(DatabaseDriver::class),
-            (new HttpClientFactory())->createHttp(),
+            Factory::getContainer()->get(HttpFactoryInterface::class)->createHttp(),
             Factory::getApplication(),
         );
 
@@ -653,7 +653,7 @@ class Update
     public function loadFromXml($url, $minimumStability = Updater::STABILITY_STABLE, $channel = null)
     {
         try {
-            $http     = (new HttpClientFactory())->createHttp();
+            $http     = Factory::getContainer()->get(HttpFactoryInterface::class)->createHttp();
             $response = $http->get($url);
         } catch (\RuntimeException) {
             $response = null;
