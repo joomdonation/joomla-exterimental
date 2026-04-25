@@ -18,6 +18,8 @@ use Joomla\CMS\Event\Extension\BeforeJoomlaUpdateEvent;
 use Joomla\CMS\Extension\ExtensionHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Filter\InputFilter;
+use Joomla\CMS\Http\HttpFactoryAwareInterface;
+use Joomla\CMS\Http\HttpFactoryAwareTrait;
 use Joomla\CMS\Installer\Installer;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Log\Log;
@@ -37,7 +39,6 @@ use Joomla\Component\Joomlaupdate\Administrator\Enum\AutoupdateRegisterState;
 use Joomla\Database\ParameterType;
 use Joomla\Filesystem\Exception\FilesystemException;
 use Joomla\Filesystem\File;
-use Joomla\Http\HttpFactory;
 use Joomla\Registry\Registry;
 use Joomla\Utilities\ArrayHelper;
 use Tobscure\JsonApi\Exception\InvalidParameterException;
@@ -51,8 +52,9 @@ use Tobscure\JsonApi\Exception\InvalidParameterException;
  *
  * @since  2.5.4
  */
-class UpdateModel extends BaseDatabaseModel
+class UpdateModel extends BaseDatabaseModel implements HttpFactoryAwareInterface
 {
+    use HttpFactoryAwareTrait;
     private const AUTOUPDATE_URL = 'https://autoupdate.joomla.org/api/v1';
 
     /**
@@ -384,12 +386,11 @@ class UpdateModel extends BaseDatabaseModel
         // We have to manually follow the redirects here so we set the option to false.
         $httpOptions = new Registry();
         $httpOptions->set('follow_location', false);
-        $httpOptions->set('userAgent', (new Version())->getUserAgent('Joomla', true, false));
 
         $response = ['basename' => false, 'check' => null, 'version' => $updateInfo['latest']];
 
         try {
-            $head = (new HttpFactory())->getHttp($httpOptions)->head($packageURL);
+            $head = $this->getHttpFactory()->createHttp($httpOptions)->head($packageURL);
         } catch (\RuntimeException) {
             // Passing false here -> download failed message
             return $response;
@@ -400,7 +401,7 @@ class UpdateModel extends BaseDatabaseModel
             $packageURL = (string) $head->getHeaders()['location'][0];
 
             try {
-                $head = (new HttpFactory())->getHttp($httpOptions)->head($packageURL);
+                $head = $this->getHttpFactory()->createHttp($httpOptions)->head($packageURL);
             } catch (\RuntimeException) {
                 // Passing false here -> download failed message
                 return $response;
@@ -585,10 +586,7 @@ class UpdateModel extends BaseDatabaseModel
         $this->cleanCache('_system');
 
         // Prepare connection
-        $options = new Registry();
-        $options->set('userAgent', (new Version())->getUserAgent('Joomla', true, false));
-
-        $http = (new HttpFactory())->getHttp($options);
+        $http = $this->getHttpFactory()->createHttp();
 
         $url = self::AUTOUPDATE_URL;
         $url .= ($targetState === AutoupdateRegisterState::Subscribe) ? '/register' : '/delete';
@@ -781,11 +779,8 @@ class UpdateModel extends BaseDatabaseModel
         }
 
         // Download the package
-        $options = new Registry();
-        $options->set('userAgent', (new Version())->getUserAgent('Joomla', true, false));
-
         try {
-            $result = (new HttpFactory())->getHttp($options, ['curl', 'stream'])->get($url);
+            $result = $this->getHttpFactory()->createHttp(null, ['curl', 'stream'])->get($url);
         } catch (\RuntimeException) {
             return false;
         }
@@ -1898,10 +1893,7 @@ ENDDATA;
     {
         $return = [];
 
-        $options = new Registry();
-        $options->set('userAgent', (new Version())->getUserAgent('Joomla', true, false));
-
-        $http = (new HttpFactory())->getHttp($options);
+        $http = $this->getHttpFactory()->createHttp();
 
         try {
             $response = $http->get($updateSiteInfo['location']);
