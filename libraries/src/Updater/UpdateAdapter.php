@@ -11,15 +11,13 @@ namespace Joomla\CMS\Updater;
 
 use Joomla\CMS\Event\Installer\BeforeUpdateSiteDownloadEvent;
 use Joomla\CMS\Factory;
+use Joomla\CMS\Http\HttpClientFactory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Log\Log;
 use Joomla\CMS\Object\LegacyPropertyManagementTrait;
 use Joomla\CMS\Plugin\PluginHelper;
-use Joomla\CMS\Version;
 use Joomla\Database\DatabaseDriver;
 use Joomla\Database\ParameterType;
-use Joomla\Http\HttpFactory;
-use Joomla\Registry\Registry;
 
 // phpcs:disable PSR1.Files.SideEffects
 \defined('_JEXEC') or die;
@@ -285,10 +283,6 @@ abstract class UpdateAdapter
 
         $startTime = microtime(true);
 
-        $version    = new Version();
-        $httpOption = new Registry();
-        $httpOption->set('userAgent', $version->getUserAgent('Joomla', true, false));
-
         $headers    = [];
         $dispatcher = Factory::getApplication()->getDispatcher();
         PluginHelper::importPlugin('installer', null, true, $dispatcher);
@@ -302,7 +296,7 @@ abstract class UpdateAdapter
 
         // Http transport throws an exception when there's no response.
         try {
-            $http     = (new HttpFactory())->getHttp($httpOption);
+            $http     = (new HttpClientFactory())->createHttp();
             $response = $http->get($newUrl, $headers, 20);
         } catch (\RuntimeException) {
             $response = null;

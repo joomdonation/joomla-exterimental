@@ -12,6 +12,7 @@ namespace Joomla\CMS\Installer;
 use Joomla\Archive\Archive;
 use Joomla\CMS\Event\Installer\BeforePackageDownloadEvent;
 use Joomla\CMS\Factory;
+use Joomla\CMS\Http\HttpClientFactory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Log\Log;
 use Joomla\CMS\Plugin\PluginHelper;
@@ -20,8 +21,6 @@ use Joomla\CMS\Version;
 use Joomla\Filesystem\File;
 use Joomla\Filesystem\Folder;
 use Joomla\Filesystem\Path;
-use Joomla\Http\HttpFactory;
-use Joomla\Registry\Registry;
 
 // phpcs:disable PSR1.Files.SideEffects
 \defined('_JEXEC') or die;
@@ -86,12 +85,9 @@ abstract class InstallerHelper
         $url     = $event->getArgument('url', $url);
         $headers = $event->getArgument('headers', $headers);
 
-        $options = new Registry();
-        $options->set('userAgent', $version->getUserAgent('Joomla', true, false));
-
         // Get the file
         try {
-            $response = (new HttpFactory())->getHttp($options)->get($url, $headers);
+            $response = (new HttpClientFactory())->createHttp()->get($url, $headers);
         } catch (\RuntimeException $exception) {
             Log::add(Text::sprintf('JLIB_INSTALLER_ERROR_DOWNLOAD_SERVER_CONNECT', $exception->getMessage()), Log::WARNING, 'jerror');
 

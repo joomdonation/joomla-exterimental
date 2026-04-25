@@ -21,7 +21,7 @@ use Joomla\DI\ServiceProviderInterface;
 /**
  * Service provider for the HTTP client factory dependency.
  *
- * @since  5.3.0
+ * @since  __DEPLOY_VERSION__
  */
 class Http implements ServiceProviderInterface
 {
@@ -32,7 +32,7 @@ class Http implements ServiceProviderInterface
      *
      * @return  void
      *
-     * @since   5.3.0
+     * @since   __DEPLOY_VERSION__
      */
     public function register(Container $container)
     {

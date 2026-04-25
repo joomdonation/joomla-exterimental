@@ -16,7 +16,7 @@ namespace Joomla\CMS\Http;
 /**
  * Defines the trait for an HttpFactoryInterface aware class.
  *
- * @since  5.3.0
+ * @since  __DEPLOY_VERSION__
  */
 trait HttpFactoryAwareTrait
 {
@@ -24,7 +24,7 @@ trait HttpFactoryAwareTrait
      * HttpFactoryInterface
      *
      * @var    HttpFactoryInterface
-     * @since  5.3.0
+     * @since  __DEPLOY_VERSION__
      */
     private $httpFactory;
 
@@ -33,7 +33,7 @@ trait HttpFactoryAwareTrait
      *
      * @return  HttpFactoryInterface
      *
-     * @since   5.3.0
+     * @since   __DEPLOY_VERSION__
      * @throws  \UnexpectedValueException May be thrown if the HttpFactory has not been set.
      */
     protected function getHttpFactory(): HttpFactoryInterface
@@ -52,7 +52,7 @@ trait HttpFactoryAwareTrait
      *
      * @return  void
      *
-     * @since   5.3.0
+     * @since   __DEPLOY_VERSION__
      */
     public function setHttpFactory(?HttpFactoryInterface $httpFactory = null): void
     {

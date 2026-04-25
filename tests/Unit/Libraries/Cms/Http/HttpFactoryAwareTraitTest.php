@@ -21,7 +21,7 @@ use Joomla\Tests\Unit\UnitTestCase;
  *
  * @package     Joomla.UnitTest
  * @subpackage  Http
- * @since       5.3.0
+ * @since       __DEPLOY_VERSION__
  */
 class HttpFactoryAwareTraitTest extends UnitTestCase
 {
@@ -30,7 +30,7 @@ class HttpFactoryAwareTraitTest extends UnitTestCase
      *
      * @return  void
      *
-     * @since   5.3.0
+     * @since   __DEPLOY_VERSION__
      */
     public function testGetSetHttpFactory()
     {
@@ -40,7 +40,7 @@ class HttpFactoryAwareTraitTest extends UnitTestCase
             {
             }
 
-            public function createHttp(?Registry $options = null): Http
+            public function createHttp(?Registry $options = null, array|string|null $adapters = null): Http
             {
                 return $this->http;
             }
@@ -65,7 +65,7 @@ class HttpFactoryAwareTraitTest extends UnitTestCase
      *
      * @return  void
      *
-     * @since   5.3.0
+     * @since   __DEPLOY_VERSION__
      */
     public function testGetHttpFactoryThrowsException()
     {

@@ -19,18 +19,19 @@ use Joomla\Registry\Registry;
 /**
  * Interface defining a factory which can create Http client objects.
  *
- * @since  5.3.0
+ * @since  __DEPLOY_VERSION__
  */
 interface HttpFactoryInterface
 {
     /**
      * Method to get an instance of a Http client.
      *
-     * @param   ?Registry  $options  Client options.
+     * @param   ?Registry          $options   Client options.
+     * @param   array|string|null  $adapters  Adapter (string) or queue of adapters (array) to use for communication.
      *
      * @return  Http
      *
-     * @since   5.3.0
+     * @since   __DEPLOY_VERSION__
      */
-    public function createHttp(?Registry $options = null): Http;
+    public function createHttp(?Registry $options = null, array|string|null $adapters = null): Http;
 }

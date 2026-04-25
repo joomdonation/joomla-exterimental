@@ -21,7 +21,7 @@ use Joomla\Registry\Registry;
 /**
  * Default factory for creating Http client objects.
  *
- * @since  5.3.0
+ * @since  __DEPLOY_VERSION__
  */
 class HttpClientFactory implements HttpFactoryInterface
 {
@@ -31,14 +31,15 @@ class HttpClientFactory implements HttpFactoryInterface
      * The factory pre-populates the userAgent option using the Joomla version string
      * when no userAgent has been provided in the options.
      *
-     * @param   ?Registry  $options  Client options.
+     * @param   ?Registry          $options   Client options.
+     * @param   array|string|null  $adapters  Adapter (string) or queue of adapters (array) to use for communication.
      *
      * @return  Http
      *
-     * @since   5.3.0
+     * @since   __DEPLOY_VERSION__
      * @throws  \RuntimeException
      */
-    public function createHttp(?Registry $options = null): Http
+    public function createHttp(?Registry $options = null, array|string|null $adapters = null): Http
     {
         $options = $options ?? new Registry();
 
@@ -46,6 +47,6 @@ class HttpClientFactory implements HttpFactoryInterface
             $options->set('userAgent', (new Version())->getUserAgent('Joomla', true, false));
         }
 
-        return (new FrameworkHttpFactory())->getHttp($options);
+        return (new FrameworkHttpFactory())->getHttp($options, $adapters);
     }
 }

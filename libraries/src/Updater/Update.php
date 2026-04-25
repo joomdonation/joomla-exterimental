@@ -11,6 +11,7 @@ namespace Joomla\CMS\Updater;
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Filter\InputFilter;
+use Joomla\CMS\Http\HttpClientFactory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Log\Log;
 use Joomla\CMS\Object\LegacyErrorHandlingTrait;
@@ -19,8 +20,6 @@ use Joomla\CMS\Table\Tuf as TufMetadata;
 use Joomla\CMS\TUF\TufFetcher;
 use Joomla\CMS\Version;
 use Joomla\Database\DatabaseDriver;
-use Joomla\Http\HttpFactory;
-use Joomla\Registry\Registry;
 
 // phpcs:disable PSR1.Files.SideEffects
 \defined('_JEXEC') or die;
@@ -548,14 +547,11 @@ class Update
      */
     public function loadFromTuf(TufMetadata $metadataTable, string $url, $minimumStability = Updater::STABILITY_STABLE, $channel = null)
     {
-        $options = new Registry();
-        $options->set('userAgent', (new Version())->getUserAgent('Joomla', true, false));
-
         $tufFetcher = new TufFetcher(
             $metadataTable,
             $url,
             Factory::getContainer()->get(DatabaseDriver::class),
-            (new HttpFactory())->getHttp($options),
+            (new HttpClientFactory())->createHttp(),
             Factory::getApplication(),
         );
 
@@ -656,12 +652,8 @@ class Update
      */
     public function loadFromXml($url, $minimumStability = Updater::STABILITY_STABLE, $channel = null)
     {
-        $version    = new Version();
-        $httpOption = new Registry();
-        $httpOption->set('userAgent', $version->getUserAgent('Joomla', true, false));
-
         try {
-            $http     = (new HttpFactory())->getHttp($httpOption);
+            $http     = (new HttpClientFactory())->createHttp();
             $response = $http->get($url);
         } catch (\RuntimeException) {
             $response = null;

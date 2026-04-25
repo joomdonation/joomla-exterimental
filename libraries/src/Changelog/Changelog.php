@@ -9,12 +9,10 @@
 
 namespace Joomla\CMS\Changelog;
 
+use Joomla\CMS\Http\HttpClientFactory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Log\Log;
 use Joomla\CMS\Object\LegacyPropertyManagementTrait;
-use Joomla\CMS\Version;
-use Joomla\Http\HttpFactory;
-use Joomla\Registry\Registry;
 
 // phpcs:disable PSR1.Files.SideEffects
 \defined('_JEXEC') or die;
@@ -344,12 +342,8 @@ class Changelog
      */
     public function loadFromXml($url)
     {
-        $version    = new Version();
-        $httpOption = new Registry();
-        $httpOption->set('userAgent', $version->getUserAgent('Joomla', true, false));
-
         try {
-            $http     = (new HttpFactory())->getHttp($httpOption);
+            $http     = (new HttpClientFactory())->createHttp();
             $response = $http->get($url);
         } catch (\RuntimeException) {
             $response = null;

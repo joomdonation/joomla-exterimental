@@ -16,7 +16,7 @@ namespace Joomla\CMS\Http;
 /**
  * Interface to be implemented by classes depending on an HTTP client factory.
  *
- * @since  5.3.0
+ * @since  __DEPLOY_VERSION__
  */
 interface HttpFactoryAwareInterface
 {
@@ -27,7 +27,7 @@ interface HttpFactoryAwareInterface
      *
      * @return  void
      *
-     * @since   5.3.0
+     * @since   __DEPLOY_VERSION__
      */
     public function setHttpFactory(?HttpFactoryInterface $httpFactory = null): void;
 }
