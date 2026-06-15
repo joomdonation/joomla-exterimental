@@ -217,7 +217,7 @@ class HtmlView extends BaseHtmlView
             foreach ($contentEvents as $resultKey => $event) {
                 $results = $dispatcher->dispatch($event->getName(), $event)->getArgument('result', []);
 
-                $itemElement->event->{$resultKey} = $results ? trim(implode("\n", $results)) : '';
+                $itemElement->event->{$resultKey} = trim(implode("\n", $results));
             }
 
             // Write the results back into the body

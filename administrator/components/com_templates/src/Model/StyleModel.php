@@ -464,7 +464,6 @@ class StyleModel extends AdminModel
         }
 
         // Trigger the before save event.
-        $dispatcher = $this->getDispatcher();
         $result = $dispatcher->dispatch($this->event_before_save, new ModelEvent\BeforeSaveEvent($this->event_before_save, [
             'context' => 'com_templates.style',
             'subject' => $table,

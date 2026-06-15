@@ -74,7 +74,7 @@ class NoteModel extends AdminModel implements VersionableModelInterface
         PluginHelper::importPlugin('content', null, true, $dispatcher);
 
         // Load the user plugins for backward compatibility (v3.3.3 and earlier).
-        PluginHelper::importPlugin('user');
+        PluginHelper::importPlugin('user', null, true, $dispatcher);
 
         // Trigger the data preparation event.
         $dispatcher->dispatch('onContentPrepareData', new ModelEvent\PrepareDataEvent('onContentPrepareData', [

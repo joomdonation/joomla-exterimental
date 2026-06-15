@@ -344,7 +344,7 @@ class HtmlView extends BaseHtmlView implements UserFactoryAwareInterface
         foreach ($contentEvents as $resultKey => $event) {
             $results = $dispatcher->dispatch($event->getName(), $event)->getArgument('result', []);
 
-            $item->event->{$resultKey} = $results ? trim(implode("\n", $results)) : '';
+            $item->event->{$resultKey} = trim(implode("\n", $results));
         }
 
         if (!empty($item->text)) {
