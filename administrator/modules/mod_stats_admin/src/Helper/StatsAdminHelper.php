@@ -15,6 +15,7 @@ use Joomla\CMS\Language\Text;
 use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\CMS\Router\Route;
 use Joomla\Database\DatabaseInterface;
+use Joomla\Event\Event;
 use Joomla\Registry\Registry;
 
 // phpcs:disable PSR1.Files.SideEffects
@@ -124,9 +125,10 @@ class StatsAdminHelper
         }
 
         // Include additional data defined by published system plugins
-        PluginHelper::importPlugin('system');
+        $dispatcher = $app->getDispatcher();
+        PluginHelper::importPlugin('system', null, true, $dispatcher);
 
-        $arrays = (array) $app->triggerEvent('onGetStats', ['mod_stats_admin']);
+        $arrays = $dispatcher->dispatch('onGetStats', new Event('onGetStats', ['mod_stats_admin']))->getArgument('result', []);
 
         foreach ($arrays as $response) {
             foreach ($response as $row) {

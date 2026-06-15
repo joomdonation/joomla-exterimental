@@ -11,6 +11,8 @@
 namespace Joomla\Plugin\Fields\Subform\Extension;
 
 use Joomla\CMS\Event\CustomFields\BeforePrepareFieldEvent;
+use Joomla\CMS\Event\CustomFields\PrepareDomEvent;
+use Joomla\CMS\Event\CustomFields\PrepareFieldEvent;
 use Joomla\CMS\Form\Form;
 use Joomla\Component\Fields\Administrator\Helper\FieldsHelper;
 use Joomla\Component\Fields\Administrator\Plugin\FieldsPlugin;
@@ -222,10 +224,14 @@ final class Subform extends FieldsPlugin implements SubscriberInterface
                         $subfield->value = $this->renderCache[$renderCache_key];
                     } else {
                         // Render this virtual subfield
-                        $subfield->value = $this->getApplication()->triggerEvent(
+                        $subfield->value = $this->getDispatcher()->dispatch(
                             'onCustomFieldsPrepareField',
-                            [$context, $item, $subfield]
-                        );
+                            new PrepareFieldEvent('onCustomFieldsPrepareField', [
+                                'context' => $context,
+                                'item'    => $item,
+                                'subject' => $subfield,
+                            ])
+                        )->getArgument('result', []);
                         $this->renderCache[$renderCache_key] = $subfield->value;
                     }
                 }
@@ -315,9 +321,13 @@ final class Subform extends FieldsPlugin implements SubscriberInterface
         foreach ($subfields as $subfield) {
             // Let the relevant plugins do their work and insert the correct
             // DOMElement's into our $parent_fieldset.
-            $this->getApplication()->triggerEvent(
+            $this->getDispatcher()->dispatch(
                 'onCustomFieldsPrepareDom',
-                [$subfield, $parent_fieldset, $form]
+                new PrepareDomEvent('onCustomFieldsPrepareDom', [
+                    'subject'  => $subfield,
+                    'fieldset' => $parent_fieldset,
+                    'form'     => $form,
+                ])
             );
         }
 

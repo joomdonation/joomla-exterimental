@@ -380,12 +380,14 @@ class QuickIconHelper
 
                 $this->buttons[$key][] = $tmp;
             }
-            PluginHelper::importPlugin('quickicon');
 
-            $arrays = (array) $application->triggerEvent(
+            $dispatcher = $application->getDispatcher();
+            PluginHelper::importPlugin('quickicon', null, true, $dispatcher);
+
+            $arrays = $dispatcher->dispatch(
                 'onGetIcons',
                 new QuickIconsEvent('onGetIcons', ['context' => $context])
-            );
+            )->getArgument('result', []);
 
             foreach ($arrays as $response) {
                 if (!\is_array($response)) {
