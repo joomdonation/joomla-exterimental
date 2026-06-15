@@ -16,12 +16,9 @@ use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Layout\FileLayout;
 use Joomla\CMS\Layout\LayoutHelper;
-use Joomla\CMS\Plugin\PluginHelper;
 
 $app        = Factory::getApplication();
 $dispatcher = $app->getDispatcher();
-
-PluginHelper::importPlugin('content', null, true, $dispatcher);
 
 /** @var \Joomla\Component\Content\Site\View\Category\HtmlView $this */
 $this->category->text = $this->category->description;

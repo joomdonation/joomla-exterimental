@@ -186,8 +186,6 @@ class ArticleModel extends AdminModel implements WorkflowModelInterface, Version
 
         $dispatcher = $this->getDispatcher();
 
-        PluginHelper::importPlugin('content', null, true, $dispatcher);
-
         $dispatcher->dispatch('onContentAfterSave', new ModelEvent\AfterSaveEvent('onContentAfterSave', [
             'context' => 'com_content.article',
             'subject' => $this->table,
@@ -224,11 +222,9 @@ class ArticleModel extends AdminModel implements WorkflowModelInterface, Version
             return false;
         }
 
-        PluginHelper::importPlugin('system');
-
         $dispatcher = $this->getDispatcher();
 
-        PluginHelper::importPlugin('content', null, true, $dispatcher);
+        PluginHelper::importPlugin('system', null, true, $dispatcher);
 
         // Parent exists so we proceed
         foreach ($pks as $pk) {
