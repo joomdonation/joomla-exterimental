@@ -12,6 +12,7 @@ namespace Joomla\Component\Content\Administrator\Model;
 
 use Joomla\CMS\Date\Date;
 use Joomla\CMS\Event\AbstractEvent;
+use Joomla\CMS\Event\Model as ModelEvent;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Filter\InputFilter;
 use Joomla\CMS\Form\Form;
@@ -183,7 +184,16 @@ class ArticleModel extends AdminModel implements WorkflowModelInterface, Version
             }
         }
 
-        Factory::getApplication()->triggerEvent('onContentAfterSave', ['com_content.article', &$this->table, false, $fieldsData]);
+        $dispatcher = $this->getDispatcher();
+
+        PluginHelper::importPlugin('content', null, true, $dispatcher);
+
+        $dispatcher->dispatch('onContentAfterSave', new ModelEvent\AfterSaveEvent('onContentAfterSave', [
+            'context' => 'com_content.article',
+            'subject' => $this->table,
+            'isNew'   => false,
+            'data'    => $fieldsData,
+        ]));
     }
 
     /**
@@ -215,6 +225,10 @@ class ArticleModel extends AdminModel implements WorkflowModelInterface, Version
         }
 
         PluginHelper::importPlugin('system');
+
+        $dispatcher = $this->getDispatcher();
+
+        PluginHelper::importPlugin('content', null, true, $dispatcher);
 
         // Parent exists so we proceed
         foreach ($pks as $pk) {
@@ -273,7 +287,12 @@ class ArticleModel extends AdminModel implements WorkflowModelInterface, Version
             }
 
             // Run event for moved article
-            Factory::getApplication()->triggerEvent('onContentAfterSave', ['com_content.article', &$this->table, false, $fieldsData]);
+            $dispatcher->dispatch('onContentAfterSave', new ModelEvent\AfterSaveEvent('onContentAfterSave', [
+                'context' => 'com_content.article',
+                'subject' => $this->table,
+                'isNew'   => false,
+                'data'    => $fieldsData,
+            ]));
         }
 
         // Clean the cache
