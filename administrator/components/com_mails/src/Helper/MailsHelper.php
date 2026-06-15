@@ -12,6 +12,7 @@ namespace Joomla\Component\Mails\Administrator\Helper;
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Language;
+use Joomla\Event\Event;
 
 // phpcs:disable PSR1.Files.SideEffects
 \defined('_JEXEC') or die;
@@ -36,7 +37,8 @@ abstract class MailsHelper
      */
     public static function mailtags($mail, $fieldname)
     {
-        Factory::getApplication()->triggerEvent('onMailBeforeTagsRendering', [$mail->template_id, &$mail]);
+        $dispatcher = Factory::getApplication()->getDispatcher();
+        $dispatcher->dispatch('onMailBeforeTagsRendering', new Event('onMailBeforeTagsRendering', [$mail->template_id, &$mail]));
 
         if (!isset($mail->params['tags']) || !\count($mail->params['tags'])) {
             return '';

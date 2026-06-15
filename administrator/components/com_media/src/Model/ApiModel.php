@@ -11,6 +11,7 @@
 namespace Joomla\Component\Media\Administrator\Model;
 
 use Joomla\CMS\Component\ComponentHelper;
+use Joomla\CMS\Event\Model as ModelEvent;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\Model\BaseDatabaseModel;
@@ -178,15 +179,20 @@ class ApiModel extends BaseDatabaseModel
             throw new FileExistsException();
         }
 
-        $app               = Factory::getApplication();
         $object            = new \stdClass();
         $object->adapter   = $adapter;
         $object->name      = $name;
         $object->path      = $path;
 
-        PluginHelper::importPlugin('content');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('content', null, true, $dispatcher);
 
-        $result = $app->triggerEvent('onContentBeforeSave', ['com_media.folder', $object, true, $object]);
+        $result = $dispatcher->dispatch('onContentBeforeSave', new ModelEvent\BeforeSaveEvent('onContentBeforeSave', [
+            'context' => 'com_media.folder',
+            'subject' => $object,
+            'isNew'   => true,
+            'data'    => $object,
+        ]))->getArgument('result', []);
 
         if (\in_array(false, $result, true)) {
             throw new \Exception($object->getError());
@@ -194,7 +200,12 @@ class ApiModel extends BaseDatabaseModel
 
         $object->name = $this->getAdapter($object->adapter)->createFolder($object->name, $object->path);
 
-        $app->triggerEvent('onContentAfterSave', ['com_media.folder', $object, true, $object]);
+        $dispatcher->dispatch('onContentAfterSave', new ModelEvent\AfterSaveEvent('onContentAfterSave', [
+            'context' => 'com_media.folder',
+            'subject' => $object,
+            'isNew'   => true,
+            'data'    => $object,
+        ]));
 
         return $object->name;
     }
@@ -233,7 +244,6 @@ class ApiModel extends BaseDatabaseModel
             throw new InvalidPathException(Text::_('JLIB_MEDIA_ERROR_WARNFILETYPE'));
         }
 
-        $app               = Factory::getApplication();
         $object            = new \stdClass();
         $object->adapter   = $adapter;
         $object->name      = $name;
@@ -241,12 +251,18 @@ class ApiModel extends BaseDatabaseModel
         $object->data      = $data;
         $object->extension = strtolower(File::getExt($name));
 
-        PluginHelper::importPlugin('content');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('content', null, true, $dispatcher);
 
         // Also include the filesystem plugins, perhaps they support batch processing too
         PluginHelper::importPlugin('media-action');
 
-        $result = $app->triggerEvent('onContentBeforeSave', ['com_media.file', $object, true, $object]);
+        $result = $dispatcher->dispatch('onContentBeforeSave', new ModelEvent\BeforeSaveEvent('onContentBeforeSave', [
+            'context' => 'com_media.file',
+            'subject' => $object,
+            'isNew'   => true,
+            'data'    => $object,
+        ]))->getArgument('result', []);
 
         if (\in_array(false, $result, true)) {
             throw new \Exception($object->getError());
@@ -254,7 +270,12 @@ class ApiModel extends BaseDatabaseModel
 
         $object->name = $this->getAdapter($object->adapter)->createFile($object->name, $object->path, $object->data);
 
-        $app->triggerEvent('onContentAfterSave', ['com_media.file', $object, true, $object]);
+        $dispatcher->dispatch('onContentAfterSave', new ModelEvent\AfterSaveEvent('onContentAfterSave', [
+            'context' => 'com_media.file',
+            'subject' => $object,
+            'isNew'   => true,
+            'data'    => $object,
+        ]));
 
         return $object->name;
     }
@@ -281,7 +302,6 @@ class ApiModel extends BaseDatabaseModel
             throw new InvalidPathException();
         }
 
-        $app               = Factory::getApplication();
         $object            = new \stdClass();
         $object->adapter   = $adapter;
         $object->name      = $name;
@@ -289,12 +309,18 @@ class ApiModel extends BaseDatabaseModel
         $object->data      = $data;
         $object->extension = strtolower(File::getExt($name));
 
-        PluginHelper::importPlugin('content');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('content', null, true, $dispatcher);
 
         // Also include the filesystem plugins, perhaps they support batch processing too
         PluginHelper::importPlugin('media-action');
 
-        $result = $app->triggerEvent('onContentBeforeSave', ['com_media.file', $object, false, $object]);
+        $result = $dispatcher->dispatch('onContentBeforeSave', new ModelEvent\BeforeSaveEvent('onContentBeforeSave', [
+            'context' => 'com_media.file',
+            'subject' => $object,
+            'isNew'   => false,
+            'data'    => $object,
+        ]))->getArgument('result', []);
 
         if (\in_array(false, $result, true)) {
             throw new \Exception($object->getError());
@@ -302,7 +328,12 @@ class ApiModel extends BaseDatabaseModel
 
         $this->getAdapter($object->adapter)->updateFile($object->name, $object->path, $object->data);
 
-        $app->triggerEvent('onContentAfterSave', ['com_media.file', $object, false, $object]);
+        $dispatcher->dispatch('onContentAfterSave', new ModelEvent\AfterSaveEvent('onContentAfterSave', [
+            'context' => 'com_media.file',
+            'subject' => $object,
+            'isNew'   => false,
+            'data'    => $object,
+        ]));
     }
 
     /**
@@ -328,17 +359,20 @@ class ApiModel extends BaseDatabaseModel
         }
 
         $type              = $file->type === 'file' ? 'file' : 'folder';
-        $app               = Factory::getApplication();
         $object            = new \stdClass();
         $object->adapter   = $adapter;
         $object->path      = $path;
 
-        PluginHelper::importPlugin('content');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('content', null, true, $dispatcher);
 
         // Also include the filesystem plugins, perhaps they support batch processing too
         PluginHelper::importPlugin('media-action');
 
-        $result = $app->triggerEvent('onContentBeforeDelete', ['com_media.' . $type, $object]);
+        $result = $dispatcher->dispatch('onContentBeforeDelete', new ModelEvent\BeforeDeleteEvent('onContentBeforeDelete', [
+            'context' => 'com_media.' . $type,
+            'subject' => $object,
+        ]))->getArgument('result', []);
 
         if (\in_array(false, $result, true)) {
             throw new \Exception($object->getError());
@@ -346,7 +380,10 @@ class ApiModel extends BaseDatabaseModel
 
         $this->getAdapter($object->adapter)->delete($object->path);
 
-        $app->triggerEvent('onContentAfterDelete', ['com_media.' . $type, $object]);
+        $dispatcher->dispatch('onContentAfterDelete', new ModelEvent\AfterDeleteEvent('onContentAfterDelete', [
+            'context' => 'com_media.' . $type,
+            'subject' => $object,
+        ]));
     }
 
     /**

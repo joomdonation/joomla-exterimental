@@ -11,12 +11,14 @@
 namespace Joomla\Component\Finder\Administrator\Model;
 
 use Joomla\CMS\Component\ComponentHelper;
+use Joomla\CMS\Event\Model as ModelEvent;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\Factory\MVCFactoryInterface;
 use Joomla\CMS\MVC\Model\ListModel;
 use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\Database\QueryInterface;
+use Joomla\Event\Event;
 
 // phpcs:disable PSR1.Files.SideEffects
 \defined('_JEXEC') or die;
@@ -123,7 +125,8 @@ class IndexModel extends ListModel
         $table = $this->getTable();
 
         // Include the content plugins for the on delete events.
-        PluginHelper::importPlugin('content');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('content', null, true, $dispatcher);
 
         // Iterate the items to delete each one.
         foreach ($pks as $i => $pk) {
@@ -132,7 +135,10 @@ class IndexModel extends ListModel
                     $context = $this->option . '.' . $this->name;
 
                     // Trigger the onContentBeforeDelete event.
-                    $result = Factory::getApplication()->triggerEvent($this->event_before_delete, [$context, $table]);
+                    $result = $dispatcher->dispatch($this->event_before_delete, new ModelEvent\BeforeDeleteEvent($this->event_before_delete, [
+                        'context' => $context,
+                        'subject' => $table,
+                    ]))->getArgument('result', []);
 
                     if (\in_array(false, $result, true)) {
                         $this->setError($table->getError());
@@ -147,7 +153,10 @@ class IndexModel extends ListModel
                     }
 
                     // Trigger the onContentAfterDelete event.
-                    Factory::getApplication()->triggerEvent($this->event_after_delete, [$context, $table]);
+                    $dispatcher->dispatch($this->event_after_delete, new ModelEvent\AfterDeleteEvent($this->event_after_delete, [
+                        'context' => $context,
+                        'subject' => $table,
+                    ]));
                 } else {
                     // Prune items that you can't change.
                     unset($pks[$i]);
@@ -376,8 +385,9 @@ class IndexModel extends ListModel
         $db->truncateTable('#__finder_tokens_aggregate');
 
         // Include the finder plugins for the on purge events.
-        PluginHelper::importPlugin('finder');
-        Factory::getApplication()->triggerEvent($this->event_after_purge);
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('finder', null, true, $dispatcher);
+        $dispatcher->dispatch($this->event_after_purge, new Event($this->event_after_purge));
 
         return true;
     }
@@ -444,7 +454,12 @@ class IndexModel extends ListModel
         $context = $this->option . '.' . $this->name;
 
         // Trigger the onContentChangeState event.
-        $result = Factory::getApplication()->triggerEvent('onContentChangeState', [$context, $pks, $value]);
+        $dispatcher = $this->getDispatcher();
+        $result = $dispatcher->dispatch('onContentChangeState', new ModelEvent\AfterChangeStateEvent('onContentChangeState', [
+            'context' => $context,
+            'subject' => $pks,
+            'value'   => $value,
+        ]))->getArgument('result', []);
 
         if (\in_array(false, $result, true)) {
             $this->setError($table->getError());
