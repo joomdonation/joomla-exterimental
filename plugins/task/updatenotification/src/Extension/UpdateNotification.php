@@ -26,6 +26,7 @@ use Joomla\Component\Scheduler\Administrator\Task\Status;
 use Joomla\Component\Scheduler\Administrator\Traits\TaskPluginTrait;
 use Joomla\Database\DatabaseAwareTrait;
 use Joomla\Database\ParameterType;
+use Joomla\Event\Event;
 use Joomla\Event\SubscriberInterface;
 use PHPMailer\PHPMailer\Exception as phpMailerException;
 
@@ -155,7 +156,7 @@ final class UpdateNotification extends CMSPlugin implements SubscriberInterface
          *
          * The plugins should modify the $uri object directly and return null.
          */
-        $this->getApplication()->triggerEvent('onBuildAdministratorLoginURL', [&$uri]);
+        $this->getDispatcher()->dispatch('onBuildAdministratorLoginURL', new Event('onBuildAdministratorLoginURL', [$uri]));
 
         // Let's find out the email addresses to notify
         $superUsers = [];

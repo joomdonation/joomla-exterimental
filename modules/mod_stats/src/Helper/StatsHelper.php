@@ -18,6 +18,7 @@ use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\Component\Content\Administrator\Extension\ContentComponent;
 use Joomla\Database\DatabaseAwareInterface;
 use Joomla\Database\DatabaseAwareTrait;
+use Joomla\Event\Event;
 use Joomla\Registry\Registry;
 
 // phpcs:disable PSR1.Files.SideEffects
@@ -147,9 +148,10 @@ class StatsHelper implements DatabaseAwareInterface
         }
 
         // Include additional data defined by published system plugins
-        PluginHelper::importPlugin('system');
+        $dispatcher = $app->getDispatcher();
+        PluginHelper::importPlugin('system', null, true, $dispatcher);
 
-        $arrays = (array) $app->triggerEvent('onGetStats', ['mod_stats']);
+        $arrays = $dispatcher->dispatch('onGetStats', new Event('onGetStats', ['mod_stats']))->getArgument('result', []);
 
         foreach ($arrays as $response) {
             foreach ($response as $row) {

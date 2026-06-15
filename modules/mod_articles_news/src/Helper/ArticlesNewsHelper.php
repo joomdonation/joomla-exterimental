@@ -13,6 +13,10 @@ namespace Joomla\Module\ArticlesNews\Site\Helper;
 use Joomla\CMS\Access\Access;
 use Joomla\CMS\Application\SiteApplication;
 use Joomla\CMS\Component\ComponentHelper;
+use Joomla\CMS\Event\Content\AfterDisplayEvent;
+use Joomla\CMS\Event\Content\AfterTitleEvent;
+use Joomla\CMS\Event\Content\BeforeDisplayEvent;
+use Joomla\CMS\Event\Content\ContentPrepareEvent;
 use Joomla\CMS\Factory;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Text;
@@ -120,6 +124,10 @@ class ArticlesNewsHelper implements DatabaseAwareInterface
         // Retrieve Content
         $items = $model->getItems();
 
+        if ($triggerEvents) {
+            $dispatcher = $app->getDispatcher();
+        }
+
         foreach ($items as &$item) {
             $item->readmore = \strlen(trim($item->fulltext));
             $item->slug     = $item->id . ':' . $item->alias;
@@ -168,15 +176,23 @@ class ArticlesNewsHelper implements DatabaseAwareInterface
 
             if ($triggerEvents) {
                 $item->text = '';
-                $app->triggerEvent('onContentPrepare', ['com_content.article', &$item, &$params, 0]);
 
-                $results                 = $app->triggerEvent('onContentAfterTitle', ['com_content.article', &$item, &$params, 0]);
+                $contentEventArguments = [
+                    'context' => 'com_content.article',
+                    'subject' => $item,
+                    'params'  => $params,
+                    'page'    => 0,
+                ];
+
+                $dispatcher->dispatch('onContentPrepare', new ContentPrepareEvent('onContentPrepare', $contentEventArguments));
+
+                $results                 = $dispatcher->dispatch('onContentAfterTitle', new AfterTitleEvent('onContentAfterTitle', $contentEventArguments))->getArgument('result', []);
                 $item->afterDisplayTitle = trim(implode("\n", $results));
 
-                $results                    = $app->triggerEvent('onContentBeforeDisplay', ['com_content.article', &$item, &$params, 0]);
+                $results                    = $dispatcher->dispatch('onContentBeforeDisplay', new BeforeDisplayEvent('onContentBeforeDisplay', $contentEventArguments))->getArgument('result', []);
                 $item->beforeDisplayContent = trim(implode("\n", $results));
 
-                $results                   = $app->triggerEvent('onContentAfterDisplay', ['com_content.article', &$item, &$params, 0]);
+                $results                   = $dispatcher->dispatch('onContentAfterDisplay', new AfterDisplayEvent('onContentAfterDisplay', $contentEventArguments))->getArgument('result', []);
                 $item->afterDisplayContent = trim(implode("\n", $results));
             } else {
                 $item->afterDisplayTitle    = '';
