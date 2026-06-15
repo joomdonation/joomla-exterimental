@@ -10,6 +10,7 @@
 
 namespace Joomla\Component\Installer\Administrator\Model;
 
+use Joomla\CMS\Event\Extension as ExtensionEvent;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Installer\Installer;
 use Joomla\CMS\Language\Text;
@@ -407,10 +408,14 @@ class UpdatesitesModel extends InstallerModel
                             }
 
                             // Load the extension plugin (if not loaded yet).
-                            PluginHelper::importPlugin('extension', 'joomla');
+                            $dispatcher = $this->getDispatcher();
+                            PluginHelper::importPlugin('extension', 'joomla', true, $dispatcher);
 
                             // Fire the onExtensionAfterUpdate
-                            $app->triggerEvent('onExtensionAfterUpdate', ['installer' => $tmpInstaller, 'eid' => $eid]);
+                            $dispatcher->dispatch('onExtensionAfterUpdate', new ExtensionEvent\AfterUpdateEvent('onExtensionAfterUpdate', [
+                                'installer' => $tmpInstaller,
+                                'eid'       => $eid,
+                            ]));
 
                             $count++;
                         }

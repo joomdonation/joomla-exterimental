@@ -12,6 +12,7 @@ namespace Joomla\Component\Languages\Administrator\Model;
 
 use Joomla\CMS\Application\ApplicationHelper;
 use Joomla\CMS\Component\ComponentHelper;
+use Joomla\CMS\Event\Model as ModelEvent;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\Language\Text;
@@ -187,6 +188,7 @@ class LanguageModel extends AdminModel
         PluginHelper::importPlugin($this->events_map['save']);
 
         $table   = $this->getTable();
+        $dispatcher = $this->getDispatcher();
         $context = $this->option . '.' . $this->name;
 
         // Load the row if saving an existing item.
@@ -232,7 +234,12 @@ class LanguageModel extends AdminModel
         }
 
         // Trigger the before save event.
-        $result = Factory::getApplication()->triggerEvent($this->event_before_save, [$context, &$table, $isNew]);
+        $result = $dispatcher->dispatch($this->event_before_save, new ModelEvent\BeforeSaveEvent($this->event_before_save, [
+            'context' => $context,
+            'subject' => $table,
+            'isNew'   => $isNew,
+            'data'    => [],
+        ]))->getArgument('result', []);
 
         // Check the event responses.
         if (\in_array(false, $result, true)) {
@@ -249,7 +256,12 @@ class LanguageModel extends AdminModel
         }
 
         // Trigger the after save event.
-        Factory::getApplication()->triggerEvent($this->event_after_save, [$context, &$table, $isNew]);
+        $dispatcher->dispatch($this->event_after_save, new ModelEvent\AfterSaveEvent($this->event_after_save, [
+            'context' => $context,
+            'subject' => $table,
+            'isNew'   => $isNew,
+            'data'    => [],
+        ]));
 
         $this->setState('language.id', $table->lang_id);
 

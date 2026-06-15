@@ -12,6 +12,7 @@ namespace Joomla\Component\Contact\Site\Model;
 
 use Joomla\CMS\Application\SiteApplication;
 use Joomla\CMS\Component\ComponentHelper;
+use Joomla\CMS\Event\Model as ModelEvent;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\Helper\TagsHelper;
@@ -370,7 +371,8 @@ class ContactModel extends FormModel
             ->createModel('User', 'Administrator', ['ignore_request' => true]);
         $data = $userModel->getItem((int) $contact->user_id);
 
-        PluginHelper::importPlugin('user');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('user', null, true, $dispatcher);
 
         // Get the form.
         Form::addFormPath(JPATH_SITE . '/components/com_users/forms');
@@ -378,10 +380,16 @@ class ContactModel extends FormModel
         $form = Form::getInstance('com_users.profile', 'profile');
 
         // Trigger the form preparation event.
-        Factory::getApplication()->triggerEvent('onContentPrepareForm', [$form, $data]);
+        $dispatcher->dispatch('onContentPrepareForm', new ModelEvent\PrepareFormEvent('onContentPrepareForm', [
+            'subject' => $form,
+            'data'    => $data,
+        ]));
 
         // Trigger the data preparation event.
-        Factory::getApplication()->triggerEvent('onContentPrepareData', ['com_users.profile', $data]);
+        $dispatcher->dispatch('onContentPrepareData', new ModelEvent\PrepareDataEvent('onContentPrepareData', [
+            'context' => 'com_users.profile',
+            'data'    => $data,
+        ]));
 
         // Load the data into the form after the plugins have operated.
         $form->bind($data);

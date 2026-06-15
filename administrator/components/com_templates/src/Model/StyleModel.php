@@ -11,6 +11,7 @@
 namespace Joomla\Component\Templates\Administrator\Model;
 
 use Joomla\CMS\Application\ApplicationHelper;
+use Joomla\CMS\Event\Model as ModelEvent;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\Language\Multilanguage;
@@ -93,7 +94,8 @@ class StyleModel extends AdminModel
         $table      = $this->getTable();
         $context    = $this->option . '.' . $this->name;
 
-        PluginHelper::importPlugin($this->events_map['delete']);
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin($this->events_map['delete'], null, true, $dispatcher);
 
         // Iterate the items to delete each one.
         foreach ($pks as $pk) {
@@ -111,7 +113,10 @@ class StyleModel extends AdminModel
                 }
 
                 // Trigger the before delete event.
-                $result = Factory::getApplication()->triggerEvent($this->event_before_delete, [$context, $table]);
+                $result = $dispatcher->dispatch($this->event_before_delete, new ModelEvent\BeforeDeleteEvent($this->event_before_delete, [
+                    'context' => $context,
+                    'subject' => $table,
+                ]))->getArgument('result', []);
 
                 if (\in_array(false, $result, true) || !$table->delete($pk)) {
                     $this->setError($table->getError());
@@ -120,7 +125,10 @@ class StyleModel extends AdminModel
                 }
 
                 // Trigger the after delete event.
-                Factory::getApplication()->triggerEvent($this->event_after_delete, [$context, $table]);
+                $dispatcher->dispatch($this->event_after_delete, new ModelEvent\AfterDeleteEvent($this->event_after_delete, [
+                    'context' => $context,
+                    'subject' => $table,
+                ]));
             } else {
                 $this->setError($table->getError());
 
@@ -155,7 +163,8 @@ class StyleModel extends AdminModel
         $context    = $this->option . '.' . $this->name;
 
         // Include the plugins for the save events.
-        PluginHelper::importPlugin($this->events_map['save']);
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin($this->events_map['save'], null, true, $dispatcher);
 
         $table = $this->getTable();
 
@@ -176,14 +185,24 @@ class StyleModel extends AdminModel
                 }
 
                 // Trigger the before save event.
-                $result = Factory::getApplication()->triggerEvent($this->event_before_save, [$context, &$table, true]);
+                $result = $dispatcher->dispatch($this->event_before_save, new ModelEvent\BeforeSaveEvent($this->event_before_save, [
+                    'context' => $context,
+                    'subject' => $table,
+                    'isNew'   => true,
+                    'data'    => [],
+                ]))->getArgument('result', []);
 
                 if (\in_array(false, $result, true) || !$table->store()) {
                     throw new \Exception($table->getError());
                 }
 
                 // Trigger the after save event.
-                Factory::getApplication()->triggerEvent($this->event_after_save, [$context, &$table, true]);
+                $dispatcher->dispatch($this->event_after_save, new ModelEvent\AfterSaveEvent($this->event_after_save, [
+                    'context' => $context,
+                    'subject' => $table,
+                    'isNew'   => true,
+                    'data'    => [],
+                ]));
             } else {
                 throw new \Exception($table->getError());
             }
@@ -412,7 +431,8 @@ class StyleModel extends AdminModel
         $isNew      = true;
 
         // Include the extension plugins for the save events.
-        PluginHelper::importPlugin($this->events_map['save']);
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin($this->events_map['save'], null, true, $dispatcher);
 
         // Load the row if saving an existing record.
         if ($pk > 0) {
@@ -444,7 +464,12 @@ class StyleModel extends AdminModel
         }
 
         // Trigger the before save event.
-        $result = Factory::getApplication()->triggerEvent($this->event_before_save, ['com_templates.style', &$table, $isNew]);
+        $result = $dispatcher->dispatch($this->event_before_save, new ModelEvent\BeforeSaveEvent($this->event_before_save, [
+            'context' => 'com_templates.style',
+            'subject' => $table,
+            'isNew'   => $isNew,
+            'data'    => $data,
+        ]))->getArgument('result', []);
 
         // Store the data.
         if (\in_array(false, $result, true) || !$table->store()) {
@@ -508,7 +533,12 @@ class StyleModel extends AdminModel
         $this->cleanCache();
 
         // Trigger the after save event.
-        Factory::getApplication()->triggerEvent($this->event_after_save, ['com_templates.style', &$table, $isNew]);
+        $dispatcher->dispatch($this->event_after_save, new ModelEvent\AfterSaveEvent($this->event_after_save, [
+            'context' => 'com_templates.style',
+            'subject' => $table,
+            'isNew'   => $isNew,
+            'data'    => $data,
+        ]));
 
         $this->setState('style.id', $table->id);
 

@@ -12,6 +12,7 @@ namespace Joomla\Component\Modules\Administrator\Model;
 
 use Joomla\CMS\Application\ApplicationHelper;
 use Joomla\CMS\Component\ComponentHelper;
+use Joomla\CMS\Event\Model as ModelEvent;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\Helper\ModuleHelper;
@@ -347,7 +348,8 @@ class ModuleModel extends AdminModel implements VersionableModelInterface
         $context    = $this->option . '.' . $this->name;
 
         // Include the plugins for the on delete events.
-        PluginHelper::importPlugin($this->events_map['delete']);
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin($this->events_map['delete'], null, true, $dispatcher);
 
         // Iterate the items to delete each one.
         foreach ($pks as $pk) {
@@ -360,7 +362,10 @@ class ModuleModel extends AdminModel implements VersionableModelInterface
                 }
 
                 // Trigger the before delete event.
-                $result = $app->triggerEvent($this->event_before_delete, [$context, $table]);
+                $result = $dispatcher->dispatch($this->event_before_delete, new ModelEvent\BeforeDeleteEvent($this->event_before_delete, [
+                    'context' => $context,
+                    'subject' => $table,
+                ]))->getArgument('result', []);
 
                 if (\in_array(false, $result, true) || !$table->delete($pk)) {
                     throw new \Exception($table->getError());
@@ -377,7 +382,10 @@ class ModuleModel extends AdminModel implements VersionableModelInterface
                 $db->execute();
 
                 // Trigger the after delete event.
-                $app->triggerEvent($this->event_after_delete, [$context, $table]);
+                $dispatcher->dispatch($this->event_after_delete, new ModelEvent\AfterDeleteEvent($this->event_after_delete, [
+                    'context' => $context,
+                    'subject' => $table,
+                ]));
 
                 // Clear module cache
                 parent::cleanCache($table->module);
@@ -961,7 +969,8 @@ class ModuleModel extends AdminModel implements VersionableModelInterface
         $context    = $this->option . '.' . $this->name;
 
         // Include the plugins for the save event.
-        PluginHelper::importPlugin($this->events_map['save']);
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin($this->events_map['save'], null, true, $dispatcher);
 
         // Load the row if saving an existing record.
         if ($pk > 0) {
@@ -1061,7 +1070,12 @@ class ModuleModel extends AdminModel implements VersionableModelInterface
         }
 
         // Trigger the after save event.
-        Factory::getApplication()->triggerEvent($this->event_after_save, [$context, &$table, $isNew]);
+        $dispatcher->dispatch($this->event_after_save, new ModelEvent\AfterSaveEvent($this->event_after_save, [
+            'context' => $context,
+            'subject' => $table,
+            'isNew'   => $isNew,
+            'data'    => $data,
+        ]));
 
         // Compute the extension id of this module in case the controller wants it.
         $query->clear()

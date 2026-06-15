@@ -11,6 +11,7 @@
 namespace Joomla\Component\Mails\Administrator\Model;
 
 use Joomla\CMS\Component\ComponentHelper;
+use Joomla\CMS\Event\Model as ModelEvent;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\Language\LanguageHelper;
@@ -345,7 +346,13 @@ class TemplateModel extends AdminModel
             }
 
             // Trigger the before save event.
-            $result = Factory::getApplication()->triggerEvent($this->event_before_save, [$context, $table, $isNew, $data]);
+            $dispatcher  = $this->getDispatcher();
+            $result = $dispatcher->dispatch($this->event_before_save, new ModelEvent\BeforeSaveEvent($this->event_before_save, [
+                'context' => $context,
+                'subject' => $table,
+                'isNew'   => $isNew,
+                'data'    => $data,
+            ]))->getArgument('result', []);
 
             if (\in_array(false, $result, true)) {
                 $this->setError($table->getError());
@@ -364,7 +371,12 @@ class TemplateModel extends AdminModel
             $this->cleanCache();
 
             // Trigger the after save event.
-            Factory::getApplication()->triggerEvent($this->event_after_save, [$context, $table, $isNew, $data]);
+            $dispatcher->dispatch($this->event_after_save, new ModelEvent\AfterSaveEvent($this->event_after_save, [
+                'context' => $context,
+                'subject' => $table,
+                'isNew'   => $isNew,
+                'data'    => $data,
+            ]));
         } catch (\Exception $e) {
             $this->setError($e->getMessage());
 

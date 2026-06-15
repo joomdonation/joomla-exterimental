@@ -12,6 +12,7 @@ namespace Joomla\Component\Users\Administrator\Model;
 
 use Joomla\CMS\Access\Access;
 use Joomla\CMS\Component\ComponentHelper;
+use Joomla\CMS\Event\User as UserEvent;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\Language\Multilanguage;
@@ -317,7 +318,8 @@ class UserModel extends AdminModel implements UserFactoryAwareInterface
         // Check if I am a Super Admin
         $iAmSuperAdmin = $user->authorise('core.admin');
 
-        PluginHelper::importPlugin($this->events_map['delete']);
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin($this->events_map['delete'], null, true, $dispatcher);
 
         if (\in_array($user->id, $pks)) {
             $this->setError(Text::_('COM_USERS_USERS_ERROR_CANNOT_DELETE_SELF'));
@@ -339,7 +341,9 @@ class UserModel extends AdminModel implements UserFactoryAwareInterface
                     $user_to_delete = $this->getUserFactory()->loadUserById($pk);
 
                     // Fire the before delete event.
-                    Factory::getApplication()->triggerEvent($this->event_before_delete, [$table->getProperties()]);
+                    $dispatcher->dispatch($this->event_before_delete, new UserEvent\BeforeDeleteEvent($this->event_before_delete, [
+                        'subject' => $table->getProperties(),
+                    ]));
 
                     if (!$table->delete($pk)) {
                         $this->setError($table->getError());
@@ -348,7 +352,11 @@ class UserModel extends AdminModel implements UserFactoryAwareInterface
                     }
 
                     // Trigger the after delete event.
-                    Factory::getApplication()->triggerEvent($this->event_after_delete, [ArrayHelper::fromObject($user_to_delete, false), true, $this->getError()]);
+                    $dispatcher->dispatch($this->event_after_delete, new UserEvent\AfterDeleteEvent($this->event_after_delete, [
+                        'subject'        => ArrayHelper::fromObject($user_to_delete, false),
+                        'deletingResult' => true,
+                        'errorMessage'   => $this->getError(),
+                    ]));
                 } else {
                     // Prune items that you can't change.
                     unset($pks[$i]);
@@ -385,7 +393,8 @@ class UserModel extends AdminModel implements UserFactoryAwareInterface
         $table         = $this->getTable();
         $pks           = (array) $pks;
 
-        PluginHelper::importPlugin($this->events_map['save']);
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin($this->events_map['save'], null, true, $dispatcher);
 
         // Prepare the logout options.
         $options = [
@@ -428,7 +437,11 @@ class UserModel extends AdminModel implements UserFactoryAwareInterface
                         }
 
                         // Trigger the before save event.
-                        $result = Factory::getApplication()->triggerEvent($this->event_before_save, [$old, false, $table->getProperties()]);
+                        $result = $dispatcher->dispatch($this->event_before_save, new UserEvent\BeforeSaveEvent($this->event_before_save, [
+                            'subject' => $old,
+                            'isNew'   => false,
+                            'data'    => $table->getProperties(),
+                        ]))->getArgument('result', []);
 
                         if (\in_array(false, $result, true)) {
                             // Plugin will have to raise its own error or throw an exception.
@@ -447,7 +460,12 @@ class UserModel extends AdminModel implements UserFactoryAwareInterface
                         }
 
                         // Trigger the after save event
-                        Factory::getApplication()->triggerEvent($this->event_after_save, [$table->getProperties(), false, true, null]);
+                        $dispatcher->dispatch($this->event_after_save, new UserEvent\AfterSaveEvent($this->event_after_save, [
+                            'subject'        => $table->getProperties(),
+                            'isNew'          => false,
+                            'savingResult'   => true,
+                            'errorMessage'   => null,
+                        ]));
                     } catch (\Exception $e) {
                         $this->setError($e->getMessage());
 
@@ -537,7 +555,8 @@ class UserModel extends AdminModel implements UserFactoryAwareInterface
             return true;
         };
 
-        PluginHelper::importPlugin($this->events_map['save']);
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin($this->events_map['save'], null, true, $dispatcher);
 
         // Activate and send the notification email
         foreach ($pks as $i => $pk) {
@@ -569,7 +588,11 @@ class UserModel extends AdminModel implements UserFactoryAwareInterface
                         }
 
                         // Trigger the before save event.
-                        $result = Factory::getApplication()->triggerEvent($this->event_before_save, [$prevUserData, false, $table->getProperties()]);
+                        $result = $dispatcher->dispatch($this->event_before_save, new UserEvent\BeforeSaveEvent($this->event_before_save, [
+                            'subject' => $prevUserData,
+                            'isNew'   => false,
+                            'data'    => $table->getProperties(),
+                        ]))->getArgument('result', []);
 
                         if (\in_array(false, $result, true)) {
                             // Plugin will have to raise it's own error or throw an exception.
@@ -584,7 +607,12 @@ class UserModel extends AdminModel implements UserFactoryAwareInterface
                         }
 
                         // Fire the after save event
-                        Factory::getApplication()->triggerEvent($this->event_after_save, [$table->getProperties(), false, true, null]);
+                        $dispatcher->dispatch($this->event_after_save, new UserEvent\AfterSaveEvent($this->event_after_save, [
+                            'subject'      => $table->getProperties(),
+                            'isNew'        => false,
+                            'savingResult' => true,
+                            'errorMessage' => null,
+                        ]));
 
                         // Send the email
                         if (!$sendMailTo($prevUserData)) {

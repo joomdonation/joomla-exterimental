@@ -11,6 +11,7 @@
 namespace Joomla\Component\Finder\Administrator\Model;
 
 use Joomla\CMS\Component\ComponentHelper;
+use Joomla\CMS\Event\Model as ModelEvent;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\Factory\MVCFactoryInterface;
@@ -117,7 +118,11 @@ class MapsModel extends ListModel
                     $context = $this->option . '.' . $this->name;
 
                     // Trigger the onContentBeforeDelete event.
-                    $result = Factory::getApplication()->triggerEvent('onContentBeforeDelete', [$context, $table]);
+                    $dispatcher = $this->getDispatcher();
+                    $result = $dispatcher->dispatch('onContentBeforeDelete', new ModelEvent\BeforeDeleteEvent('onContentBeforeDelete', [
+                        'context' => $context,
+                        'subject' => $table,
+                    ]))->getArgument('result', []);
 
                     if (\in_array(false, $result, true)) {
                         $this->setError($table->getError());
@@ -132,7 +137,10 @@ class MapsModel extends ListModel
                     }
 
                     // Trigger the onContentAfterDelete event.
-                    Factory::getApplication()->triggerEvent('onContentAfterDelete', [$context, $table]);
+                    $dispatcher->dispatch('onContentAfterDelete', new ModelEvent\AfterDeleteEvent('onContentAfterDelete', [
+                        'context' => $context,
+                        'subject' => $table,
+                    ]));
                 } else {
                     // Prune items that you can't change.
                     unset($pks[$i]);
@@ -339,7 +347,12 @@ class MapsModel extends ListModel
         $context = $this->option . '.' . $this->name;
 
         // Trigger the onContentChangeState event.
-        $result = Factory::getApplication()->triggerEvent('onContentChangeState', [$context, $pks, $value]);
+        $dispatcher = $this->getDispatcher();
+        $result = $dispatcher->dispatch('onContentChangeState', new ModelEvent\AfterChangeStateEvent('onContentChangeState', [
+            'context' => $context,
+            'subject' => $pks,
+            'value'   => $value,
+        ]))->getArgument('result', []);
 
         if (\in_array(false, $result, true)) {
             $this->setError($table->getError());

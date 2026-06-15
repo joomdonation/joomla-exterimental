@@ -15,6 +15,7 @@ use Joomla\CMS\Table\Table;
 use Joomla\Database\DatabaseInterface;
 use Joomla\Database\QueryInterface;
 use Joomla\Event\DispatcherInterface;
+use Joomla\Event\Event;
 use Joomla\Utilities\ArrayHelper;
 
 /**
@@ -403,7 +404,7 @@ abstract class DebugAdapter extends CMSPlugin
 
         // Check the items.
         if (empty($items)) {
-            $this->getApplication()->triggerEvent('onFinderIndexAfterDelete', [$id]);
+            $this->getApplication()->getDispatcher()->dispatch('onFinderIndexAfterDelete', new Event('onFinderIndexAfterDelete', [$id]));
 
             return true;
         }

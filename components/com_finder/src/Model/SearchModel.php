@@ -18,6 +18,7 @@ use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\CMS\Uri\Uri;
 use Joomla\Component\Finder\Administrator\Indexer\Query;
 use Joomla\Database\QueryInterface;
+use Joomla\Event\Event;
 use Joomla\String\StringHelper;
 
 // phpcs:disable PSR1.Files.SideEffects
@@ -365,10 +366,11 @@ class SearchModel extends ListModel
         }
 
         // Import Finder plugins
-        PluginHelper::importPlugin('finder');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('finder', null, true, $dispatcher);
 
         // Trigger an event, in case a plugin wishes to change the order fields.
-        $app->triggerEvent('onFinderSortOrderFields', [&$sortOrderFields]);
+        $dispatcher->dispatch('onFinderSortOrderFields', new Event('onFinderSortOrderFields', [&$sortOrderFields]));
 
         return $sortOrderFields;
     }

@@ -17,6 +17,7 @@ use Joomla\CMS\Profiler\Profiler;
 use Joomla\Database\DatabaseInterface;
 use Joomla\Database\ParameterType;
 use Joomla\Database\QueryInterface;
+use Joomla\Event\Event;
 use Joomla\Filesystem\File;
 use Joomla\String\StringHelper;
 
@@ -630,8 +631,9 @@ class Indexer
         static::$profiler ? static::$profiler->mark('afterTruncating') : null;
 
         // Trigger a plugin event after indexing
-        PluginHelper::importPlugin('finder');
-        Factory::getApplication()->triggerEvent('onFinderIndexAfterIndex', [$item, $linkId]);
+        $dispatcher = Factory::getApplication()->getDispatcher();
+        PluginHelper::importPlugin('finder', null, true, $dispatcher);
+        $dispatcher->dispatch('onFinderIndexAfterIndex', new Event('onFinderIndexAfterIndex', [$item, $linkId]));
 
         return $linkId;
     }
@@ -690,8 +692,9 @@ class Indexer
             Taxonomy::removeOrphanNodes();
         }
 
-        PluginHelper::importPlugin('finder');
-        Factory::getApplication()->triggerEvent('onFinderIndexAfterDelete', [$linkId]);
+        $dispatcher = Factory::getApplication()->getDispatcher();
+        PluginHelper::importPlugin('finder', null, true, $dispatcher);
+        $dispatcher->dispatch('onFinderIndexAfterDelete', new Event('onFinderIndexAfterDelete', [$linkId]));
 
         return true;
     }
