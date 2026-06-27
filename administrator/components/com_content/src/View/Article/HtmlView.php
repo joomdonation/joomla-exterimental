@@ -10,11 +10,13 @@
 
 namespace Joomla\Component\Content\Administrator\View\Article;
 
+use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Helper\ContentHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\View\FormView;
 use Joomla\CMS\Toolbar\ToolbarHelper;
+use Joomla\Component\Content\Administrator\Helper\PreviewTokenHelper;
 use Joomla\Component\Content\Site\Helper\RouteHelper;
 
 // phpcs:disable PSR1.Files.SideEffects
@@ -86,6 +88,19 @@ class HtmlView extends FormView
         $this->canDo = ContentHelper::getActions('com_content', 'article', $this->item->id);
 
         $url = RouteHelper::getArticleRoute($this->item->id . ':' . $this->item->alias, $this->item->catid, $this->item->language);
+
+        // Generate preview token if editing an existing article
+        if ($this->item->id > 0)
+        {
+        	$app    = Factory::getApplication();
+        	$params = ComponentHelper::getParams('com_content');
+        	$expiration = (int) $params->get('preview_token_expiration', 24);
+
+        	$tokenHelper = new PreviewTokenHelper($app->get('secret'));
+        	$token = $tokenHelper->createToken((int) $this->item->id, $expiration);
+
+        	$url .= '&preview_token=' . $token;
+        }
 
         $this->previewLink = $url;
         $this->jooa11yLink = $url . '&jooa11y=1';
