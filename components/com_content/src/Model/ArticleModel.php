@@ -41,6 +41,14 @@ class ArticleModel extends ItemModel
     protected $_context = 'com_content.article';
 
     /**
+     * Cached preview token helper instance.
+     *
+     * @var        PreviewTokenHelper|null
+     * @since      __DEPLOY_VERSION__
+     */
+    private ?PreviewTokenHelper $previewTokenHelper = null;
+
+    /**
      * Method to auto-populate the model state.
      *
      * Note. Calling getState in this method will result in recursion.
@@ -73,9 +81,11 @@ class ArticleModel extends ItemModel
         $token = $app->getInput()->getString('preview_token', '');
 
         if ($token !== '' && $pk > 0) {
-            $tokenHelper = new PreviewTokenHelper($app->get('secret'));
+            if ($this->previewTokenHelper === null) {
+                $this->previewTokenHelper = new PreviewTokenHelper($app->get('secret'));
+            }
 
-            if ($tokenHelper->validateToken($token, $pk)) {
+            if ($this->previewTokenHelper->validateToken($token, $pk)) {
                 $this->setState('article.preview', true);
             }
         }

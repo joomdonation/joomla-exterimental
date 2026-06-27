@@ -99,7 +99,8 @@ class HtmlView extends FormView
         	$tokenHelper = new PreviewTokenHelper($app->get('secret'));
         	$token = $tokenHelper->createToken((int) $this->item->id, $expiration);
 
-        	$url .= '&preview_token=' . $token;
+        	// Append token using proper URL query parameter handling
+        	$url .= (strpos($url, '?') === false ? '?' : '&') . 'preview_token=' . urlencode($token);
         }
 
         $this->previewLink = $url;
