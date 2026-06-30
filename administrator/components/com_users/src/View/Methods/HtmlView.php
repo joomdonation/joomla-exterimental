@@ -188,7 +188,7 @@ class HtmlView extends BaseHtmlView
         parent::display($tpl);
 
         $event = new NotifyActionLog('onComUsersViewMethodsAfterDisplay', [$this]);
-        Factory::getApplication()->getDispatcher()->dispatch($event->getName(), $event);
+        $this->getDispatcher()->dispatch($event->getName(), $event);
 
         Text::script('JGLOBAL_CONFIRM_DELETE');
     }

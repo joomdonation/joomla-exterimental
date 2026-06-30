@@ -550,9 +550,10 @@ class UpdateModel extends BaseDatabaseModel
         $app = Factory::getApplication();
 
         // Run preparation plugin trigger
-        PluginHelper::importPlugin('installer');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('installer', null, true, $dispatcher);
 
-        $eventResult = $this->getDispatcher()->dispatch(
+        $eventResult = $dispatcher->dispatch(
             'onBeforeJoomlaAutoupdate',
             new BeforeJoomlaAutoupdateEvent(
                 'onBeforeJoomlaAutoupdate'
@@ -841,14 +842,15 @@ class UpdateModel extends BaseDatabaseModel
     public function createUpdateFile($basename = null): bool
     {
         // Load overrides plugin.
-        PluginHelper::importPlugin('installer');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('installer', null, true, $dispatcher);
 
         // Get a password
         $password = UserHelper::genRandomPassword(32);
         $app      = Factory::getApplication();
 
         // Trigger event before joomla update.
-        $this->getDispatcher()->dispatch('onJoomlaBeforeUpdate', new BeforeJoomlaUpdateEvent('onJoomlaBeforeUpdate'));
+        $dispatcher->dispatch('onJoomlaBeforeUpdate', new BeforeJoomlaUpdateEvent('onJoomlaBeforeUpdate'));
 
         // Get the absolute path to site's root.
         $siteroot = JPATH_SITE;
@@ -1151,7 +1153,8 @@ ENDDATA;
         }
 
         // Load overrides plugin.
-        PluginHelper::importPlugin('installer');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('installer', null, true, $dispatcher);
 
         $app = Factory::getApplication();
 
@@ -1183,7 +1186,7 @@ ENDDATA;
         $oldVersion = $app->getUserState('com_joomlaupdate.oldversion');
 
         // Trigger event after joomla update.
-        $this->getDispatcher()->dispatch('onJoomlaAfterUpdate', new AfterJoomlaUpdateEvent('onJoomlaAfterUpdate', [
+        $dispatcher->dispatch('onJoomlaAfterUpdate', new AfterJoomlaUpdateEvent('onJoomlaAfterUpdate', [
             'oldVersion' => $oldVersion ?: '',
         ]));
         $app->setUserState('com_joomlaupdate.oldversion', null);

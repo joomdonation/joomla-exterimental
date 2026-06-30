@@ -326,7 +326,8 @@ class TransitionModel extends AdminModel
         $form->setFieldAttribute('rules', 'component', $extension);
 
         // Import the appropriate plugin group.
-        PluginHelper::importPlugin('workflow');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('workflow', null, true, $dispatcher);
 
         parent::preprocessForm($form, $data, $group);
     }

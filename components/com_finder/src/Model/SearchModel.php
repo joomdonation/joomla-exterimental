@@ -365,7 +365,8 @@ class SearchModel extends ListModel
         }
 
         // Import Finder plugins
-        PluginHelper::importPlugin('finder');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('finder', null, true, $dispatcher);
 
         // Trigger an event, in case a plugin wishes to change the order fields.
         $app->triggerEvent('onFinderSortOrderFields', [&$sortOrderFields]);

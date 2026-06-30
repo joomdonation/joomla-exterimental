@@ -71,7 +71,7 @@ class CapabilitiesModel extends BaseModel
          * This is in addition to plugin groups which are imported before this method is triggered, generally this is the system group.
          */
 
-        $dispatcher = $app->getDispatcher();
+        $dispatcher = $this->getDispatcher();
 
         PluginHelper::importPlugin('authentication', null, true, $dispatcher);
         PluginHelper::importPlugin('captcha', null, true, $dispatcher);

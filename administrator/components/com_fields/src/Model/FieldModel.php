@@ -176,7 +176,8 @@ class FieldModel extends AdminModel
         }
 
         // Load the fields plugins, perhaps they want to do something
-        PluginHelper::importPlugin('fields');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('fields', null, true, $dispatcher);
 
         $message = $this->checkDefaultValue($data);
 
@@ -568,7 +569,8 @@ class FieldModel extends AdminModel
         }
 
         // Load the fields plugin that they can add additional parameters to the form
-        PluginHelper::importPlugin('fields');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('fields', null, true, $dispatcher);
 
         // Get the form.
         $form = $this->loadForm(

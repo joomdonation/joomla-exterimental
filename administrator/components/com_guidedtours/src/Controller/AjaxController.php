@@ -70,7 +70,8 @@ class AjaxController extends BaseController
                 break;
         }
 
-        PluginHelper::importPlugin('guidedtours');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('guidedtours', null, true, $dispatcher);
 
         // event onBeforeTourSaveUserState before save user tour state
         $beforeEvent = AbstractEvent::create(
@@ -83,7 +84,7 @@ class AjaxController extends BaseController
             ]
         );
 
-        $this->app->getDispatcher()->dispatch('onBeforeTourSaveUserState', $beforeEvent);
+        $dispatcher->dispatch('onBeforeTourSaveUserState', $beforeEvent);
 
         // Save the tour state only when the tour auto-starts.
         $tourModel = $this->getModel('Tour', 'Administrator');

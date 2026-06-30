@@ -137,7 +137,8 @@ class RegistrationModel extends FormModel implements UserFactoryAwareInterface, 
         }
 
         // Load the users plugin group.
-        PluginHelper::importPlugin('user');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('user', null, true, $dispatcher);
 
         // Activate the user.
         $user = $this->getUserFactory()->loadUserById($userId);
@@ -472,7 +473,8 @@ class RegistrationModel extends FormModel implements UserFactoryAwareInterface, 
         }
 
         // Load the users plugin group.
-        PluginHelper::importPlugin('user');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('user', null, true, $dispatcher);
 
         // Store the data.
         if (!$user->save()) {
