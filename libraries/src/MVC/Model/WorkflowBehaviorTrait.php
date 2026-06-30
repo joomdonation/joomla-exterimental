@@ -318,7 +318,12 @@ trait WorkflowBehaviorTrait
      */
     protected function importWorkflowPlugins()
     {
-        $dispatcher = $this->getDispatcher();
+        if ($this instanceof DispatcherAwareInterface) {
+            $dispatcher = $this->getDispatcher();
+        } else {
+            $dispatcher = Factory::getContainer()->get(DispatcherInterface::class);
+        }
+
         PluginHelper::importPlugin('workflow', null, true, $dispatcher);
     }
 

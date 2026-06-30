@@ -148,7 +148,11 @@ trait FormBehaviorTrait
      */
     protected function preprocessData($context, &$data, $group = 'content')
     {
-        $dispatcher = $this->getDispatcher();
+        if ($this instanceof DispatcherAwareInterface) {
+            $dispatcher = $this->getDispatcher();
+        } else {
+            $dispatcher = Factory::getContainer()->get(DispatcherInterface::class);
+        }
 
         // Get the dispatcher and load the users plugins.
         PluginHelper::importPlugin($group, null, true, $dispatcher);
@@ -179,7 +183,11 @@ trait FormBehaviorTrait
      */
     protected function preprocessForm(Form $form, $data, $group = 'content')
     {
-        $dispatcher = $this->getDispatcher();
+        if ($this instanceof DispatcherAwareInterface) {
+            $dispatcher = $this->getDispatcher();
+        } else {
+            $dispatcher = Factory::getContainer()->get(DispatcherInterface::class);
+        }
 
         // Import the appropriate plugin group.
         PluginHelper::importPlugin($group, null, true, $dispatcher);
