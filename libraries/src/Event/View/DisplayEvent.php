@@ -44,15 +44,15 @@ class DisplayEvent extends AbstractImmutableEvent
     public function __construct($name, array $arguments = [])
     {
         if (!($arguments['subject'] instanceof ViewInterface)) {
-            throw new \BadMethodCallException("Argument 'subject' of event {$this->name} is not of type 'ViewInterface'");
+            throw new \BadMethodCallException("Argument 'subject' of event {$name} is not of type 'ViewInterface'");
         }
 
         if (!\is_string($arguments['extension'])) {
-            throw new \BadMethodCallException("Argument 'extension' of event {$this->name} is not of type 'string'");
+            throw new \BadMethodCallException("Argument 'extension' of event {$name} is not of type 'string'");
         }
 
         if (!str_contains($arguments['extension'], '.')) {
-            throw new \BadMethodCallException("Argument 'extension' of event {$this->name} has wrong format. Valid format: 'component.section'");
+            throw new \BadMethodCallException("Argument 'extension' of event {$name} has wrong format. Valid format: 'component.section'");
         }
 
         if (!\array_key_exists('extensionName', $arguments) || !\array_key_exists('section', $arguments)) {
