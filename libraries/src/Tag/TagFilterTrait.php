@@ -96,7 +96,7 @@ trait TagFilterTrait
                     . $db->quoteName('tagmap2.content_item_id') . ' IS NULL)'
                 );
             }
-        } elseif (is_numeric($tag)) {
+        } elseif (\is_numeric($tag)) {
             $tag = (int) $tag;
 
             if ($tag === 0) {

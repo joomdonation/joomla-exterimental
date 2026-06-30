@@ -378,7 +378,7 @@ class ListModel extends BaseDatabaseModel implements FormFactoryAwareInterface, 
         // guarantees a stable serialisation regardless of the order in which states were set.
         $filterState = (array) $this->getState('filter');
         ksort($filterState);
-        $id .= ':' . serialize($filterState);
+        $id .= ':' . json_encode($filterState);
 
         // Add the list state to the store id.
         $id .= ':' . $this->getState('list.start');
