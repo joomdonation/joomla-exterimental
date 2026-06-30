@@ -123,6 +123,7 @@ abstract class AbstractEvent extends Event
         // Validate required arguments
         foreach ($this->requiredArguments as $requiredArgument) {
             if (!\array_key_exists($requiredArgument, $arguments)) {
+                throw new \BadMethodCallException("Argument '{$requiredArgument}' of event {$name} is required but has not been provided");
             }
         }
 

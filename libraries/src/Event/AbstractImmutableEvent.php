@@ -51,6 +51,7 @@ class AbstractImmutableEvent extends AbstractEvent
         // Validate required arguments before calling parent constructor
         foreach ($this->requiredArguments as $requiredArgument) {
             if (!\array_key_exists($requiredArgument, $arguments)) {
+                throw new \BadMethodCallException("Argument '{$requiredArgument}' of event {$name} is required but has not been provided");
             }
         }
 
