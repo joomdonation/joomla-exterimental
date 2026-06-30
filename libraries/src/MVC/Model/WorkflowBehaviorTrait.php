@@ -318,7 +318,8 @@ trait WorkflowBehaviorTrait
      */
     protected function importWorkflowPlugins()
     {
-        PluginHelper::importPlugin('workflow');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('workflow', null, true, $dispatcher);
     }
 
     /**

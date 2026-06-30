@@ -183,7 +183,7 @@ abstract class JsonApiView extends JsonView
         $event     = new OnGetApiFields('onApiGetFields', $eventData);
 
         /** @var OnGetApiFields $eventResult */
-        $eventResult = Factory::getApplication()->getDispatcher()->dispatch('onApiGetFields', $event);
+        $eventResult = $this->getDispatcher()->dispatch('onApiGetFields', $event);
 
         $collection = (new Collection($items, $this->serializer))
             ->fields([$this->type => $eventResult->getAllPropertiesToRender()]);
@@ -237,7 +237,7 @@ abstract class JsonApiView extends JsonView
         $event     = new OnGetApiFields('onApiGetFields', $eventData);
 
         /** @var OnGetApiFields $eventResult */
-        $eventResult = Factory::getApplication()->getDispatcher()->dispatch('onApiGetFields', $event);
+        $eventResult = $this->getDispatcher()->dispatch('onApiGetFields', $event);
 
         $element = (new Resource($item, $this->serializer))
             ->fields([$this->type => $eventResult->getAllPropertiesToRender()]);

@@ -296,8 +296,9 @@ abstract class AdminModel extends FormModel
             return false;
         }
 
-        $done = false;
-        PluginHelper::importPlugin($this->events_map['batch']);
+        $done       = false;
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin($this->events_map['batch'], null, true, $dispatcher);
 
         // Initialize re-usable member properties
         $this->initBatch();

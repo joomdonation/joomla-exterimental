@@ -187,9 +187,10 @@ class HtmlView extends AbstractView implements CurrentUserInterface
             $component = ApplicationHelper::getComponentName();
         }
 
-        $context = $component . '.' . $this->getName();
+        $context    = $component . '.' . $this->getName();
+        $dispatcher = $this->getDispatcher();
 
-        $app->getDispatcher()->dispatch(
+        $dispatcher->dispatch(
             'onBeforeDisplay',
             AbstractEvent::create(
                 'onBeforeDisplay',
@@ -203,7 +204,7 @@ class HtmlView extends AbstractView implements CurrentUserInterface
 
         $result = $this->loadTemplate($tpl);
 
-        $event = $app->getDispatcher()->dispatch(
+        $event = $dispatcher->dispatch(
             'onAfterDisplay',
             AbstractEvent::create(
                 'onAfterDisplay',
