@@ -65,115 +65,67 @@ class OverrideController extends FormController
      * @param   string  $key     The name of the primary key of the URL variable (not used here).
      * @param   string  $urlVar  The name of the URL variable if different from the primary key (not used here).
      *
-     * @return  void
+     * @return  boolean  True if successful, false otherwise.
      *
      * @since   2.5
      */
     public function save($key = null, $urlVar = null)
     {
-        // Check for request forgeries.
-        $this->checkToken();
+        // Language overrides use 'id' as the key (constant name).
+        // Call parent save method with the key set to 'id'.
+        return parent::save('id', 'id');
+    }
 
-        $app     = $this->app;
-        $model   = $this->getModel();
-        $data    = $this->input->post->get('jform', [], 'array');
-        $context = "$this->option.edit.$this->context";
-        $task    = $this->getTask();
+    /**
+     * Method to preprocess data gotten from the request before further processing.
+     *
+     * @param   array  $data  The data array.
+     *
+     * @return  array  The processed data array.
+     *
+     * @since   6.1.0
+     */
+    protected function preprocessSaveData(array $data): array
+    {
+        // Populate the id from the request (which may be a string constant name).
+        $data['id'] = $this->input->get('id', '', 'string');
 
-        $recordId   = $this->input->get('id');
-        $data['id'] = $recordId;
+        return $data;
+    }
 
-        // Access check.
-        if (!$this->allowSave($data, 'id')) {
-            $this->setMessage(Text::_('JLIB_APPLICATION_ERROR_SAVE_NOT_PERMITTED'), 'error');
-            $this->setRedirect(Route::_('index.php?option=' . $this->option . '&view=' . $this->view_list . $this->getRedirectToListAppend(), false));
-
-            return;
-        }
-
-        // Validate the posted data.
-        $form = $model->getForm($data, false);
-
-        if (!$form) {
-            $app->enqueueMessage($model->getError(), 'error');
-
-            return;
-        }
-
-        // Test whether the data is valid.
-        $validData = $model->validate($form, $data);
-
-        // Check for validation errors.
-        if ($validData === false) {
-            // Get the validation messages.
-            $errors = $model->getErrors();
-
-            // Push up to three validation messages out to the user.
-            for ($i = 0, $n = \count($errors); $i < $n && $i < 3; $i++) {
-                if ($errors[$i] instanceof \Exception) {
-                    $app->enqueueMessage($errors[$i]->getMessage(), CMSWebApplicationInterface::MSG_ERROR);
-                } else {
-                    $app->enqueueMessage($errors[$i], CMSWebApplicationInterface::MSG_ERROR);
-                }
-            }
-
-            // Save the data in the session.
-            $app->setUserState($context . '.data', $data);
-
-            // Redirect back to the edit screen.
-            $this->setRedirect(
-                Route::_('index.php?option=' . $this->option . '&view=' . $this->view_item . $this->getRedirectToItemAppend($recordId, 'id'), false)
-            );
-
-            return;
-        }
-
-        // Attempt to save the data.
-        if (!$model->save($validData)) {
-            // Save the data in the session.
-            $app->setUserState($context . '.data', $validData);
-
-            // Redirect back to the edit screen.
-            $this->setMessage(Text::sprintf('JLIB_APPLICATION_ERROR_SAVE_FAILED', $model->getError()), 'error');
-            $this->setRedirect(
-                Route::_('index.php?option=' . $this->option . '&view=' . $this->view_item . $this->getRedirectToItemAppend($recordId, 'id'), false)
-            );
-
-            return;
-        }
-
-        // Add message of success.
+    /**
+     * Method to set the save success message.
+     *
+     * @param   int  $recordId  The record id.
+     *
+     * @return  void
+     *
+     * @since   6.1.0
+     */
+    protected function setSaveSuccessMessage($recordId): void
+    {
         $this->setMessage(Text::_('COM_LANGUAGES_VIEW_OVERRIDE_SAVE_SUCCESS'));
+    }
 
-        // Redirect the user and adjust session state based on the chosen task.
-        switch ($task) {
-            case 'apply':
-                // Set the record data in the session.
-                $app->setUserState($context . '.data', null);
+    /**
+     * Function that allows child controller access to model data after the data has been saved.
+     *
+     * @param   \Joomla\CMS\MVC\Model\BaseDatabaseModel  $model      The data model object.
+     * @param   array                                    $validData  The validated data.
+     *
+     * @return  void
+     *
+     * @since   6.1.0
+     */
+    protected function postSaveHook(\Joomla\CMS\MVC\Model\BaseDatabaseModel $model, $validData = [])
+    {
+        $task = $this->getTask();
 
-                // Redirect back to the edit screen
-                $this->setRedirect(
-                    Route::_('index.php?option=' . $this->option . '&view=' . $this->view_item . $this->getRedirectToItemAppend($validData['key'], 'id'), false)
-                );
-                break;
-
-            case 'save2new':
-                // Clear the record id and data from the session.
-                $app->setUserState($context . '.data', null);
-
-                // Redirect back to the edit screen
-                $this->setRedirect(
-                    Route::_('index.php?option=' . $this->option . '&view=' . $this->view_item . $this->getRedirectToItemAppend(null, 'id'), false)
-                );
-                break;
-
-            default:
-                // Clear the record id and data from the session.
-                $app->setUserState($context . '.data', null);
-
-                // Redirect to the list screen.
-                $this->setRedirect(Route::_('index.php?option=' . $this->option . '&view=' . $this->view_list . $this->getRedirectToListAppend(), false));
-                break;
+        // For 'apply' task, we need to redirect to the saved key instead of recordId.
+        if ($task === 'apply' && isset($validData['key'])) {
+            $this->setRedirect(
+                Route::_('index.php?option=' . $this->option . '&view=' . $this->view_item . $this->getRedirectToItemAppend($validData['key'], 'id'), false)
+            );
         }
     }
 
