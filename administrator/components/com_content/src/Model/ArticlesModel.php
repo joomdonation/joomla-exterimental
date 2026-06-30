@@ -17,7 +17,6 @@ use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\Factory\MVCFactoryInterface;
 use Joomla\CMS\MVC\Model\ListModel;
 use Joomla\CMS\Plugin\PluginHelper;
-use Joomla\CMS\Table\Category;
 use Joomla\Component\Content\Administrator\Extension\ContentComponent;
 use Joomla\Database\ParameterType;
 use Joomla\Database\QueryInterface;
@@ -157,40 +156,6 @@ class ArticlesModel extends ListModel
             $this->setState('filter.language', $forcedLanguage);
             $this->setState('filter.forcedLanguage', $forcedLanguage);
         }
-    }
-
-    /**
-     * Method to get a store id based on model configuration state.
-     *
-     * This is necessary because the model is used by the component and
-     * different modules that might need different sets of data or different
-     * ordering requirements.
-     *
-     * @param   string  $id  A prefix for the store id.
-     *
-     * @return  string  A store id.
-     *
-     * @since   1.6
-     */
-    protected function getStoreId($id = '')
-    {
-        // Compile the store id.
-        $id .= ':' . $this->getState('filter.search');
-        $id .= ':' . serialize($this->getState('filter.access'));
-        $id .= ':' . $this->getState('filter.published');
-        $id .= ':' . $this->getState('filter.featured');
-        $id .= ':' . serialize($this->getState('filter.category_id'));
-        $id .= ':' . serialize($this->getState('filter.author_id'));
-        $id .= ':' . $this->getState('filter.language');
-        $id .= ':' . serialize($this->getState('filter.tag'));
-        $id .= ':' . $this->getState('filter.checked_out');
-        $id .= ':' . $this->getState('filter.date_filtering');
-        $id .= ':' . $this->getState('filter.date_field');
-        $id .= ':' . $this->getState('filter.start_date_range');
-        $id .= ':' . $this->getState('filter.end_date_range');
-        $id .= ':' . $this->getState('filter.relative_date');
-
-        return parent::getStoreId($id);
     }
 
     /**
@@ -369,48 +334,13 @@ class ArticlesModel extends ListModel
             }
         }
 
-        // Filter by categories and by level
-        $categoryId = $this->getState('filter.category_id', []);
-        $level      = (int) $this->getState('filter.level');
-
-        if (!\is_array($categoryId)) {
-            $categoryId = $categoryId ? [$categoryId] : [];
-        }
-
-        // Case: Using both categories filter and by level filter
-        if (\count($categoryId)) {
-            $categoryId       = ArrayHelper::toInteger($categoryId);
-            $categoryTable    = new Category($db);
-            $subCatItemsWhere = [];
-
-            foreach ($categoryId as $key => $filter_catid) {
-                $categoryTable->load($filter_catid);
-
-                // Because values to $query->bind() are passed by reference, using $query->bindArray() here instead to prevent overwriting.
-                $valuesToBind = [$categoryTable->lft, $categoryTable->rgt];
-
-                if ($level) {
-                    $valuesToBind[] = $level + $categoryTable->level - 1;
-                }
-
-                // Bind values and get parameter names.
-                $bounded = $query->bindArray($valuesToBind);
-
-                $categoryWhere = $db->quoteName('c.lft') . ' >= ' . $bounded[0] . ' AND ' . $db->quoteName('c.rgt') . ' <= ' . $bounded[1];
-
-                if ($level) {
-                    $categoryWhere .= ' AND ' . $db->quoteName('c.level') . ' <= ' . $bounded[2];
-                }
-
-                $subCatItemsWhere[] = '(' . $categoryWhere . ')';
-            }
-
-            $query->where('(' . implode(' OR ', $subCatItemsWhere) . ')');
-        } elseif ($level = (int) $level) {
-            // Case: Using only the by level filter
-            $query->where($db->quoteName('c.level') . ' <= :level')
-                ->bind(':level', $level, ParameterType::INTEGER);
-        }
+        // Filter by categories and by level.
+        $this->filterQueryByCategoryId(
+            $query,
+            $this->getState('filter.category_id', []),
+            $this->getState('filter.level'),
+            'c'
+        );
 
         // Filter by author
         $authorId = $this->getState('filter.author_id');
@@ -518,84 +448,7 @@ class ArticlesModel extends ListModel
         }
 
         // Filter by a single or group of tags.
-        $tag = $this->getState('filter.tag');
-
-        // Run simplified query when filtering by one tag.
-        if (\is_array($tag) && \count($tag) === 1) {
-            $tag = $tag[0];
-        }
-
-        if ($tag && \is_array($tag)) {
-            $tag         = ArrayHelper::toInteger($tag);
-            $includeNone = false;
-
-            if (\in_array(0, $tag)) {
-                $tag         = array_filter($tag);
-                $includeNone = true;
-            }
-
-            $subQuery = $db->createQuery()
-                ->select('DISTINCT ' . $db->quoteName('content_item_id'))
-                ->from($db->quoteName('#__contentitem_tag_map'))
-                ->where(
-                    [
-                        $db->quoteName('tag_id') . ' IN (' . implode(',', $query->bindArray($tag)) . ')',
-                        $db->quoteName('type_alias') . ' = ' . $db->quote('com_content.article'),
-                    ]
-                );
-
-            $query->join(
-                $includeNone ? 'LEFT' : 'INNER',
-                '(' . $subQuery . ') AS ' . $db->quoteName('tagmap'),
-                $db->quoteName('tagmap.content_item_id') . ' = ' . $db->quoteName('a.id')
-            );
-
-            if ($includeNone) {
-                $subQuery2 = $db->createQuery()
-                    ->select('DISTINCT ' . $db->quoteName('content_item_id'))
-                    ->from($db->quoteName('#__contentitem_tag_map'))
-                    ->where($db->quoteName('type_alias') . ' = ' . $db->quote('com_content.article'));
-                $query->join(
-                    'LEFT',
-                    '(' . $subQuery2 . ') AS ' . $db->quoteName('tagmap2'),
-                    $db->quoteName('tagmap2.content_item_id') . ' = ' . $db->quoteName('a.id')
-                )
-                ->where(
-                    '(' . $db->quoteName('tagmap.content_item_id') . ' IS NOT NULL OR '
-                    . $db->quoteName('tagmap2.content_item_id') . ' IS NULL)'
-                );
-            }
-        } elseif (is_numeric($tag)) {
-            $tag = (int) $tag;
-
-            if ($tag === 0) {
-                $subQuery = $db->createQuery()
-                    ->select('DISTINCT ' . $db->quoteName('content_item_id'))
-                    ->from($db->quoteName('#__contentitem_tag_map'))
-                    ->where($db->quoteName('type_alias') . ' = ' . $db->quote('com_content.article'));
-
-                // Only show articles without tags
-                $query->join(
-                    'LEFT',
-                    '(' . $subQuery . ') AS ' . $db->quoteName('tagmap'),
-                    $db->quoteName('tagmap.content_item_id') . ' = ' . $db->quoteName('a.id')
-                )
-                ->where($db->quoteName('tagmap.content_item_id') . ' IS NULL');
-            } else {
-                $query->join(
-                    'INNER',
-                    $db->quoteName('#__contentitem_tag_map', 'tagmap'),
-                    $db->quoteName('tagmap.content_item_id') . ' = ' . $db->quoteName('a.id')
-                )
-                ->where(
-                    [
-                        $db->quoteName('tagmap.tag_id') . ' = :tag',
-                        $db->quoteName('tagmap.type_alias') . ' = ' . $db->quote('com_content.article'),
-                    ]
-                )
-                ->bind(':tag', $tag, ParameterType::INTEGER);
-            }
-        }
+        $this->filterQueryByTag($query, 'com_content.article', $this->getState('filter.tag'));
 
         // Filter by date after modified date.
         $modifiedStartDateTime = $this->getState('filter.modified_start');

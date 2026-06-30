@@ -14,10 +14,8 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Associations;
 use Joomla\CMS\MVC\Factory\MVCFactoryInterface;
 use Joomla\CMS\MVC\Model\ListModel;
-use Joomla\CMS\Table\Category;
 use Joomla\Database\ParameterType;
 use Joomla\Database\QueryInterface;
-use Joomla\Utilities\ArrayHelper;
 
 // phpcs:disable PSR1.Files.SideEffects
 \defined('_JEXEC') or die;
@@ -106,33 +104,6 @@ class ContactsModel extends ListModel
         if (!empty($forcedLanguage)) {
             $this->setState('filter.language', $forcedLanguage);
         }
-    }
-
-    /**
-     * Method to get a store id based on model configuration state.
-     *
-     * This is necessary because the model is used by the component and
-     * different modules that might need different sets of data or different
-     * ordering requirements.
-     *
-     * @param   string  $id  A prefix for the store id.
-     *
-     * @return  string  A store id.
-     *
-     * @since   1.6
-     */
-    protected function getStoreId($id = '')
-    {
-        // Compile the store id.
-        $id .= ':' . $this->getState('filter.search');
-        $id .= ':' . $this->getState('filter.published');
-        $id .= ':' . serialize($this->getState('filter.category_id'));
-        $id .= ':' . $this->getState('filter.access');
-        $id .= ':' . $this->getState('filter.language');
-        $id .= ':' . serialize($this->getState('filter.tag'));
-        $id .= ':' . $this->getState('filter.level');
-
-        return parent::getStoreId($id);
     }
 
     /**
@@ -251,22 +222,7 @@ class ContactsModel extends ListModel
         }
 
         // Filter by search in name.
-        $search = $this->getState('filter.search');
-
-        if (!empty($search)) {
-            if (stripos($search, 'id:') === 0) {
-                $search = substr($search, 3);
-                $query->where($db->quoteName('a.id') . ' = :id');
-                $query->bind(':id', $search, ParameterType::INTEGER);
-            } else {
-                $search = '%' . trim($search) . '%';
-                $query->where(
-                    '(' . $db->quoteName('a.name') . ' LIKE :name OR ' . $db->quoteName('a.alias') . ' LIKE :alias)'
-                );
-                $query->bind(':name', $search);
-                $query->bind(':alias', $search);
-            }
-        }
+        $this->filterQueryBySearch($query, 'a.id', ['a.name', 'a.alias']);
 
         // Filter on the language.
         if ($language = $this->getState('filter.language')) {
@@ -275,114 +231,15 @@ class ContactsModel extends ListModel
         }
 
         // Filter by a single or group of tags.
-        $tag = $this->getState('filter.tag');
+        $this->filterQueryByTag($query, 'com_contact.contact', $this->getState('filter.tag'));
 
-        // Run simplified query when filtering by one tag.
-        if (\is_array($tag) && \count($tag) === 1) {
-            $tag = $tag[0];
-        }
-
-        if ($tag && \is_array($tag)) {
-            $tag         = ArrayHelper::toInteger($tag);
-            $includeNone = false;
-
-            if (\in_array(0, $tag)) {
-                $tag         = array_filter($tag);
-                $includeNone = true;
-            }
-
-            $subQuery = $db->createQuery()
-                ->select('DISTINCT ' . $db->quoteName('content_item_id'))
-                ->from($db->quoteName('#__contentitem_tag_map'))
-                ->where(
-                    [
-                        $db->quoteName('tag_id') . ' IN (' . implode(',', $query->bindArray($tag)) . ')',
-                        $db->quoteName('type_alias') . ' = ' . $db->quote('com_contact.contact'),
-                    ]
-                );
-
-            $query->join(
-                $includeNone ? 'LEFT' : 'INNER',
-                '(' . $subQuery . ') AS ' . $db->quoteName('tagmap'),
-                $db->quoteName('tagmap.content_item_id') . ' = ' . $db->quoteName('a.id')
-            );
-
-            if ($includeNone) {
-                $subQuery2 = $db->createQuery()
-                    ->select('DISTINCT ' . $db->quoteName('content_item_id'))
-                    ->from($db->quoteName('#__contentitem_tag_map'))
-                    ->where($db->quoteName('type_alias') . ' = ' . $db->quote('com_contact.contact'));
-                $query->join(
-                    'LEFT',
-                    '(' . $subQuery2 . ') AS ' . $db->quoteName('tagmap2'),
-                    $db->quoteName('tagmap2.content_item_id') . ' = ' . $db->quoteName('a.id')
-                )
-                ->where(
-                    '(' . $db->quoteName('tagmap.content_item_id') . ' IS NOT NULL OR '
-                    . $db->quoteName('tagmap2.content_item_id') . ' IS NULL)'
-                );
-            }
-        } elseif (is_numeric($tag)) {
-            $tag = (int) $tag;
-
-            if ($tag === 0) {
-                $subQuery = $db->createQuery()
-                    ->select('DISTINCT ' . $db->quoteName('content_item_id'))
-                    ->from($db->quoteName('#__contentitem_tag_map'))
-                    ->where($db->quoteName('type_alias') . ' = ' . $db->quote('com_contact.contact'));
-
-                // Only show contacts without tags
-                $query->join(
-                    'LEFT',
-                    '(' . $subQuery . ') AS ' . $db->quoteName('tagmap'),
-                    $db->quoteName('tagmap.content_item_id') . ' = ' . $db->quoteName('a.id')
-                )
-                ->where($db->quoteName('tagmap.content_item_id') . ' IS NULL');
-            } else {
-                $query->join(
-                    'INNER',
-                    $db->quoteName('#__contentitem_tag_map', 'tagmap'),
-                    $db->quoteName('tagmap.content_item_id') . ' = ' . $db->quoteName('a.id')
-                )
-                ->where(
-                    [
-                        $db->quoteName('tagmap.tag_id') . ' = :tag',
-                        $db->quoteName('tagmap.type_alias') . ' = ' . $db->quote('com_contact.contact'),
-                    ]
-                )
-                ->bind(':tag', $tag, ParameterType::INTEGER);
-            }
-        }
-
-        // Filter by categories and by level
-        $categoryId = $this->getState('filter.category_id', []);
-        $level      = $this->getState('filter.level');
-
-        if (!\is_array($categoryId)) {
-            $categoryId = $categoryId ? [$categoryId] : [];
-        }
-
-        // Case: Using both categories filter and by level filter
-        if (\count($categoryId)) {
-            $categoryId       = ArrayHelper::toInteger($categoryId);
-            $categoryTable    = new Category($db);
-            $subCatItemsWhere = [];
-
-            // @todo: Convert to prepared statement
-            foreach ($categoryId as $filter_catid) {
-                $categoryTable->load($filter_catid);
-                $subCatItemsWhere[] = '(' .
-                    ($level ? 'c.level <= ' . ((int) $level + (int) $categoryTable->level - 1) . ' AND ' : '') .
-                    'c.lft >= ' . (int) $categoryTable->lft . ' AND ' .
-                    'c.rgt <= ' . (int) $categoryTable->rgt . ')';
-            }
-
-            $query->where('(' . implode(' OR ', $subCatItemsWhere) . ')');
-        } elseif ($level) {
-            // Case: Using only the by level filter
-            $query->where($db->quoteName('c.level') . ' <= :level');
-            $query->bind(':level', $level, ParameterType::INTEGER);
-        }
+        // Filter by categories and by level.
+        $this->filterQueryByCategoryId(
+            $query,
+            $this->getState('filter.category_id', []),
+            $this->getState('filter.level'),
+            'c'
+        );
 
         // Add the list ordering clause.
         $orderCol  = $this->state->get('list.ordering', 'a.name');

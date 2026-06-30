@@ -9,6 +9,7 @@
 
 namespace Joomla\CMS\MVC\Model;
 
+use Joomla\CMS\Categories\CategoryFilterTrait;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Filter\InputFilter;
 use Joomla\CMS\Form\Form;
@@ -16,6 +17,8 @@ use Joomla\CMS\Form\FormFactoryAwareInterface;
 use Joomla\CMS\Form\FormFactoryAwareTrait;
 use Joomla\CMS\MVC\Factory\MVCFactoryInterface;
 use Joomla\CMS\Pagination\Pagination;
+use Joomla\CMS\Tag\TagFilterTrait;
+use Joomla\Database\ParameterType;
 use Joomla\Database\QueryInterface;
 
 // phpcs:disable PSR1.Files.SideEffects
@@ -29,8 +32,10 @@ use Joomla\Database\QueryInterface;
  */
 class ListModel extends BaseDatabaseModel implements FormFactoryAwareInterface, ListModelInterface
 {
+    use CategoryFilterTrait;
     use FormBehaviorTrait;
     use FormFactoryAwareTrait;
+    use TagFilterTrait;
 
     /**
      * Internal memory based cache array of data.
@@ -267,6 +272,67 @@ class ListModel extends BaseDatabaseModel implements FormFactoryAwareInterface, 
     }
 
     /**
+     * Applies a generic search filter to a query using the filter.search model state.
+     *
+     * Handles two cases automatically:
+     * - "id:N"  → exact match on $idColumn (e.g. 'a.id')
+     * - anything else → case-insensitive LIKE search across all $searchColumns
+     *
+     * Spaces in a plain search term are replaced with wildcard '%' characters so that
+     * multi-word searches can match across fields or in different positions.
+     *
+     * Models that need additional search prefixes (e.g. "author:", "content:") should
+     * check those prefixes first and only call this method for the default case.
+     *
+     * @param   QueryInterface  $query          The query to modify
+     * @param   string          $idColumn       Fully-qualified column used for the id: lookup, e.g. 'a.id'
+     * @param   string[]        $searchColumns  Fully-qualified columns to LIKE-search, e.g. ['a.title','a.alias']
+     *
+     * @return  void
+     *
+     * @since   5.3.0
+     */
+    protected function filterQueryBySearch(QueryInterface $query, string $idColumn, array $searchColumns): void
+    {
+        $search = $this->getState('filter.search');
+
+        if (empty($search)) {
+            return;
+        }
+
+        $db = $this->getDatabase();
+
+        if (stripos($search, 'id:') === 0) {
+            $search = (int) substr($search, 3);
+            $query->where($db->quoteName($idColumn) . ' = :searchId')
+                ->bind(':searchId', $search, ParameterType::INTEGER);
+
+            return;
+        }
+
+        $search     = '%' . str_replace(' ', '%', trim($search)) . '%';
+        $conditions = [];
+        $bindNames  = [];
+
+        foreach ($searchColumns as $i => $column) {
+            $placeholder  = ':searchCol' . $i;
+            $conditions[] = $db->quoteName($column) . ' LIKE ' . $placeholder;
+            $bindNames[]  = $placeholder;
+        }
+
+        if (empty($conditions)) {
+            return;
+        }
+
+        if (\count($conditions) === 1) {
+            $query->where($conditions[0])->bind($bindNames[0], $search);
+        } else {
+            $query->extendWhere('AND', $conditions, 'OR')
+                ->bind($bindNames, $search);
+        }
+    }
+
+    /**
      * Method to get a \JPagination object for the data set.
      *
      * @return  Pagination  A Pagination object for the data set.
@@ -306,6 +372,14 @@ class ListModel extends BaseDatabaseModel implements FormFactoryAwareInterface, 
      */
     protected function getStoreId($id = '')
     {
+        // Automatically include all filter states so subclasses do not need to override this method
+        // just to add their own filter states.  $this->getState('filter') returns the entire filter
+        // sub-object from the Registry as a stdClass; casting it to an array and sorting by key
+        // guarantees a stable serialisation regardless of the order in which states were set.
+        $filterState = (array) $this->getState('filter');
+        ksort($filterState);
+        $id .= ':' . json_encode($filterState);
+
         // Add the list state to the store id.
         $id .= ':' . $this->getState('list.start');
         $id .= ':' . $this->getState('list.limit');
