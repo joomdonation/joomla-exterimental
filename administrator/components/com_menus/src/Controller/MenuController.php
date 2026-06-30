@@ -60,10 +60,8 @@ class MenuController extends FormController
         // Check for request forgeries.
         $this->checkToken();
 
-        $app      = $this->app;
         $data     = $this->input->post->get('jform', [], 'array');
         $context  = 'com_menus.edit.menu';
-        $task     = $this->getTask();
         $recordId = $this->input->getInt('id');
 
         // Prevent using 'main' as menutype as this is reserved for backend menus
@@ -78,111 +76,101 @@ class MenuController extends FormController
 
         $data['menutype'] = InputFilter::getInstance()->clean($data['menutype'], 'TRIM');
 
-        // Populate the row id from the session.
-        $data['id'] = $recordId;
+        // Store the preset value before validation (it will be removed by model).
+        $preset = null;
 
-        // Get the model and attempt to validate the posted data.
-        /** @var \Joomla\Component\Menus\Administrator\Model\MenuModel $model */
-        $model = $this->getModel('Menu', '', ['ignore_request' => false]);
-        $form  = $model->getForm();
-
-        if (!$form) {
-            throw new \Exception($model->getError(), 500);
+        if (isset($data['preset'])) {
+            $preset = trim($data['preset']) ?: null;
         }
 
-        $validData = $model->validate($form, $data);
+        // Temporarily store preset in a class property to use in postSaveHook.
+        $this->preset       = $preset;
+        $this->presetClient = $data['client_id'] ?? 0;
 
-        // Check for validation errors.
-        if ($validData === false) {
-            // Get the validation messages.
-            $errors = $model->getErrors();
+        // Call parent save method to handle the rest.
+        return parent::save('id', 'id');
+    }
 
-            // Push up to three validation messages out to the user.
-            for ($i = 0, $n = \count($errors); $i < $n && $i < 3; $i++) {
-                if ($errors[$i] instanceof \Exception) {
-                    $app->enqueueMessage($errors[$i]->getMessage(), CMSWebApplicationInterface::MSG_ERROR);
-                } else {
-                    $app->enqueueMessage($errors[$i], CMSWebApplicationInterface::MSG_ERROR);
-                }
-            }
+    /**
+     * Method to preprocess data gotten from the request before further processing.
+     *
+     * @param   array  $data  The data array.
+     *
+     * @return  array  The processed data array.
+     *
+     * @since   6.1.0
+     */
+    protected function preprocessSaveData(array $data): array
+    {
+        // Populate the id from the request.
+        $data['id'] = $this->input->getInt('id');
 
-            // Save the data in the session.
-            $app->setUserState($context . '.data', $data);
+        return $data;
+    }
 
-            // Redirect back to the edit screen.
-            $this->setRedirect(Route::_('index.php?option=com_menus&view=menu&layout=edit' . $this->getRedirectToItemAppend($recordId), false));
-
-            return false;
+    /**
+     * Method to set the save success message.
+     *
+     * @param   int  $recordId  The record id.
+     *
+     * @return  void
+     *
+     * @since   6.1.0
+     */
+    protected function setSaveSuccessMessage($recordId): void
+    {
+        // Check if we imported a preset.
+        if (isset($this->preset) && $this->preset && $this->presetClient == 1) {
+            $this->setMessage(Text::_('COM_MENUS_PRESET_IMPORT_SUCCESS'));
+        } else {
+            $this->setMessage(Text::_('COM_MENUS_MENU_SAVE_SUCCESS'));
         }
+    }
 
-        if (isset($validData['preset'])) {
-            $preset = trim($validData['preset']) ?: null;
-
-            unset($validData['preset']);
-        }
-
-        // Attempt to save the data.
-        if (!$model->save($validData)) {
-            // Save the data in the session.
-            $app->setUserState($context . '.data', $validData);
-
-            // Redirect back to the edit screen.
-            $this->setMessage(Text::sprintf('JLIB_APPLICATION_ERROR_SAVE_FAILED', $model->getError()), 'error');
-            $this->setRedirect(Route::_('index.php?option=com_menus&view=menu&layout=edit' . $this->getRedirectToItemAppend($recordId), false));
-
-            return false;
-        }
-
-        // Import the preset selected
-        if (isset($preset) && $data['client_id'] == 1) {
+    /**
+     * Function that allows child controller access to model data after the data has been saved.
+     *
+     * @param   \Joomla\CMS\MVC\Model\BaseDatabaseModel  $model      The data model object.
+     * @param   array                                    $validData  The validated data.
+     *
+     * @return  void
+     *
+     * @since   6.1.0
+     */
+    protected function postSaveHook(\Joomla\CMS\MVC\Model\BaseDatabaseModel $model, $validData = [])
+    {
+        // Import the preset if selected.
+        if (isset($this->preset) && $this->preset && $this->presetClient == 1) {
             // Menu Type has not been saved yet. Make sure items get the real menutype.
-            $menutype = ApplicationHelper::stringURLSafe($data['menutype']);
+            $menutype = ApplicationHelper::stringURLSafe($validData['menutype']);
 
             try {
-                MenusHelper::installPreset($preset, $menutype);
-
-                $this->setMessage(Text::_('COM_MENUS_PRESET_IMPORT_SUCCESS'));
+                MenusHelper::installPreset($this->preset, $menutype);
             } catch (\Exception $e) {
                 // Save was successful but the preset could not be loaded. Let it through with just a warning
                 $this->setMessage(Text::sprintf('COM_MENUS_PRESET_IMPORT_FAILED', $e->getMessage()));
             }
-        } else {
-            $this->setMessage(Text::_('COM_MENUS_MENU_SAVE_SUCCESS'));
         }
 
-        // Redirect the user and adjust session state based on the chosen task.
-        switch ($task) {
-            case 'apply':
-                // Set the record data in the session.
-                $recordId = $model->getState($this->context . '.id');
-                $this->holdEditId($context, $recordId);
-                $app->setUserState($context . '.data', null);
-
-                // Redirect back to the edit screen.
-                $this->setRedirect(Route::_('index.php?option=com_menus&view=menu&layout=edit' . $this->getRedirectToItemAppend($recordId), false));
-                break;
-
-            case 'save2new':
-                // Clear the record id and data from the session.
-                $this->releaseEditId($context, $recordId);
-                $app->setUserState($context . '.data', null);
-
-                // Redirect back to the edit screen.
-                $this->setRedirect(Route::_('index.php?option=com_menus&view=menu&layout=edit', false));
-                break;
-
-            default:
-                // Clear the record id and data from the session.
-                $this->releaseEditId($context, $recordId);
-                $app->setUserState($context . '.data', null);
-
-                // Redirect to the list screen.
-                $this->setRedirect(Route::_('index.php?option=com_menus&view=menus', false));
-                break;
-        }
-
-        return true;
+        // Clean up temporary properties.
+        unset($this->preset, $this->presetClient);
     }
+
+    /**
+     * Temporary property to store preset value.
+     *
+     * @var    string|null
+     * @since  6.1.0
+     */
+    private $preset;
+
+    /**
+     * Temporary property to store client ID for preset.
+     *
+     * @var    int
+     * @since  6.1.0
+     */
+    private $presetClient;
 
     /**
      * Method to display a menu as preset xml.

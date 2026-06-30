@@ -260,73 +260,14 @@ class ItemController extends FormController
         // Check for request forgeries.
         $this->checkToken();
 
-        /** @var \Joomla\Component\Menus\Administrator\Model\ItemModel $model */
-        $model    = $this->getModel('Item', 'Administrator', []);
-        $table    = $model->getTable();
-        $data     = $this->input->post->get('jform', [], 'array');
-        $task     = $this->getTask();
-        $context  = 'com_menus.edit.item';
-        $app      = $this->app;
+        $data = $this->input->post->get('jform', [], 'array');
 
         // Set the menutype should we need it.
         if ($data['menutype'] !== '') {
             $this->input->set('menutype', $data['menutype']);
         }
 
-        // Determine the name of the primary key for the data.
-        if (empty($key)) {
-            $key = $table->getKeyName();
-        }
-
-        // To avoid data collisions the urlVar may be different from the primary key.
-        if (empty($urlVar)) {
-            $urlVar = $key;
-        }
-
-        $recordId = $this->input->getInt($urlVar);
-
-        // Populate the row id from the session.
-        $data[$key] = $recordId;
-
-        // The save2copy task needs to be handled slightly differently.
-        if ($task == 'save2copy') {
-            // Check-in the original row.
-            if ($model->checkin($data['id']) === false) {
-                // Check-in failed, go back to the item and display a notice.
-                $this->setMessage(Text::sprintf('JLIB_APPLICATION_ERROR_CHECKIN_FAILED', $model->getError()), 'warning');
-
-                return false;
-            }
-
-            // Reset the ID and then treat the request as for Apply.
-            $data['id']           = 0;
-            $data['associations'] = [];
-            $task                 = 'apply';
-        }
-
-        // Access check.
-        if (!$this->allowSave($data, $key)) {
-            $this->setMessage(Text::_('JLIB_APPLICATION_ERROR_SAVE_NOT_PERMITTED'), 'error');
-
-            $this->setRedirect(
-                Route::_(
-                    'index.php?option=' . $this->option . '&view=' . $this->view_list
-                    . $this->getRedirectToListAppend(),
-                    false
-                )
-            );
-
-            return false;
-        }
-
-        // Validate the posted data.
-        // This post is made up of two forms, one for the item and one for params.
-        $form = $model->getForm($data);
-
-        if (!$form) {
-            throw new \Exception($model->getError(), 500);
-        }
-
+        // URL validation and protocol check for url type menu items.
         if ($data['type'] == 'url') {
             $data['link'] = str_replace(['"', '>', '<'], '', $data['link']);
 
@@ -341,7 +282,8 @@ class ItemController extends FormController
                 ];
 
                 if (!\in_array($protocol, $scheme)) {
-                    $app->enqueueMessage(Text::_('JLIB_APPLICATION_ERROR_SAVE_NOT_PERMITTED'), 'warning');
+                    $recordId = $this->input->getInt($key ?? 'id');
+                    $this->app->enqueueMessage(Text::_('JLIB_APPLICATION_ERROR_SAVE_NOT_PERMITTED'), 'warning');
                     $this->setRedirect(
                         Route::_('index.php?option=' . $this->option . '&view=' . $this->view_item . $this->getRedirectToItemAppend($recordId), false)
                     );
@@ -351,140 +293,117 @@ class ItemController extends FormController
             }
         }
 
-        $data = $model->validate($form, $data);
+        // Call parent save method to handle the rest.
+        return parent::save($key, $urlVar);
+    }
 
-        // Preprocess request fields to ensure that we remove not set or empty request params
+    /**
+     * Method to preprocess data gotten from the request before further processing.
+     *
+     * @param   array  $data  The data array.
+     *
+     * @return  array  The processed data array.
+     *
+     * @since   6.1.0
+     */
+    protected function preprocessSaveData(array $data): array
+    {
+        /** @var \Joomla\Component\Menus\Administrator\Model\ItemModel $model */
+        $model = $this->getModel('Item', 'Administrator', []);
+        $form  = $model->getForm($data, false);
+
+        if (!$form) {
+            throw new \Exception($model->getError(), 500);
+        }
+
+        // Perform early validation to process request params.
+        $validatedData = $model->validate($form, $data);
+
+        // Preprocess request fields to ensure that we remove not set or empty request params.
         $request = $form->getGroup('request', true);
 
         // Check for the special 'request' entry.
         if ($data['type'] == 'component' && !empty($request)) {
             $removeArgs = [];
 
-            if (!isset($data['request']) || !\is_array($data['request'])) {
-                $data['request'] = [];
+            if (!isset($validatedData['request']) || !\is_array($validatedData['request'])) {
+                $validatedData['request'] = [];
             }
 
             foreach ($request as $field) {
                 $fieldName = $field->getAttribute('name');
 
-                if (!isset($data['request'][$fieldName]) || $data['request'][$fieldName] == '') {
+                if (!isset($validatedData['request'][$fieldName]) || $validatedData['request'][$fieldName] == '') {
                     $removeArgs[$fieldName] = '';
                 }
             }
 
             // Parse the submitted link arguments.
             $args = [];
-            parse_str(parse_url($data['link'], PHP_URL_QUERY), $args);
+            parse_str(parse_url($validatedData['link'], PHP_URL_QUERY), $args);
 
             // Merge in the user supplied request arguments.
-            $args = array_merge($args, $data['request']);
+            $args = array_merge($args, $validatedData['request']);
 
-            // Remove the unused request params
+            // Remove the unused request params.
             if (!empty($args) && !empty($removeArgs)) {
                 $args = array_diff_key($args, $removeArgs);
             }
 
-            $data['link'] = 'index.php?' . urldecode(http_build_query($args, '', '&'));
+            $validatedData['link'] = 'index.php?' . urldecode(http_build_query($args, '', '&'));
         }
 
-        // Check for validation errors.
-        if ($data === false) {
-            // Get the validation messages.
-            $errors = $model->getErrors();
+        // Return the preprocessed data merged with original data.
+        return array_merge($data, $validatedData);
+    }
 
-            // Push up to three validation messages out to the user.
-            for ($i = 0, $n = \count($errors); $i < $n && $i < 3; $i++) {
-                if ($errors[$i] instanceof \Exception) {
-                    $app->enqueueMessage($errors[$i]->getMessage(), CMSWebApplicationInterface::MSG_ERROR);
-                } else {
-                    $app->enqueueMessage($errors[$i], CMSWebApplicationInterface::MSG_ERROR);
-                }
-            }
+    /**
+     * Function that allows child controller access to model data after the data has been saved.
+     *
+     * @param   \Joomla\CMS\MVC\Model\BaseDatabaseModel  $model      The data model object.
+     * @param   array                                    $validData  The validated data.
+     *
+     * @return  void
+     *
+     * @since   6.1.0
+     */
+    protected function postSaveHook(\Joomla\CMS\MVC\Model\BaseDatabaseModel $model, $validData = [])
+    {
+        $task    = $this->getTask();
+        $context = 'com_menus.edit.item';
 
-            // Save the data in the session.
-            $app->setUserState('com_menus.edit.item.data', $data);
+        // Clear ancillary session data.
+        $this->app->setUserState($context . '.type', null);
+        $this->app->setUserState($context . '.link', null);
 
-            // Redirect back to the edit screen.
-            $editUrl = 'index.php?option=' . $this->option . '&view=' . $this->view_item . $this->getRedirectToItemAppend($recordId);
-            $this->setRedirect(Route::_($editUrl, false));
+        // When editing in modal then redirect to modalreturn layout.
+        if ($this->input->get('layout') === 'modal' && $task === 'save') {
+            $recordId = $model->getState($this->context . '.id');
+            $return   = 'index.php?option=' . $this->option . '&view=' . $this->view_item . $this->getRedirectToItemAppend($recordId)
+                . '&layout=modalreturn&from-task=save';
 
-            return false;
+            $this->setRedirect(Route::_($return, false));
+        } elseif ($task !== 'apply' && $task !== 'save2new' && $this->input->get('layout') !== 'modal') {
+            // For default save task, redirect to list with menutype parameter.
+            $return = 'index.php?option=' . $this->option . '&view=' . $this->view_list . $this->getRedirectToListAppend()
+                . '&menutype=' . $this->app->getUserState('com_menus.items.menutype');
+
+            $this->setRedirect(Route::_($return, false));
         }
+    }
 
-        // Attempt to save the data.
-        if (!$model->save($data)) {
-            // Save the data in the session.
-            $app->setUserState('com_menus.edit.item.data', $data);
-
-            // Redirect back to the edit screen.
-            $editUrl = 'index.php?option=' . $this->option . '&view=' . $this->view_item . $this->getRedirectToItemAppend($recordId);
-            $this->setMessage(Text::sprintf('JLIB_APPLICATION_ERROR_SAVE_FAILED', $model->getError()), 'error');
-            $this->setRedirect(Route::_($editUrl, false));
-
-            return false;
-        }
-
-        // Save succeeded, check-in the row.
-        if ($model->checkin($data['id']) === false) {
-            // Check-in failed, go back to the row and display a notice.
-            $this->setMessage(Text::sprintf('JLIB_APPLICATION_ERROR_CHECKIN_FAILED', $model->getError()), 'warning');
-            $redirectUrl = 'index.php?option=' . $this->option . '&view=' . $this->view_item . $this->getRedirectToItemAppend($recordId);
-            $this->setRedirect(Route::_($redirectUrl, false));
-
-            return false;
-        }
-
+    /**
+     * Method to set the save success message.
+     *
+     * @param   int  $recordId  The record id.
+     *
+     * @return  void
+     *
+     * @since   6.1.0
+     */
+    protected function setSaveSuccessMessage($recordId): void
+    {
         $this->setMessage(Text::_('COM_MENUS_SAVE_SUCCESS'));
-
-        // Redirect the user and adjust session state based on the chosen task.
-        switch ($task) {
-            case 'apply':
-                // Set the row data in the session.
-                $recordId = $model->getState($this->context . '.id');
-                $this->holdEditId($context, $recordId);
-                $app->setUserState('com_menus.edit.item.data', null);
-                $app->setUserState('com_menus.edit.item.type', null);
-                $app->setUserState('com_menus.edit.item.link', null);
-
-                // Redirect back to the edit screen.
-                $editUrl = 'index.php?option=' . $this->option . '&view=' . $this->view_item . $this->getRedirectToItemAppend($recordId);
-                $this->setRedirect(Route::_($editUrl, false));
-                break;
-
-            case 'save2new':
-                // Clear the row id and data in the session.
-                $this->releaseEditId($context, $recordId);
-                $app->setUserState('com_menus.edit.item.data', null);
-                $app->setUserState('com_menus.edit.item.type', null);
-                $app->setUserState('com_menus.edit.item.link', null);
-
-                // Redirect back to the edit screen.
-                $this->setRedirect(Route::_('index.php?option=' . $this->option . '&view=' . $this->view_item . $this->getRedirectToItemAppend(), false));
-                break;
-
-            default:
-                // Clear the row id and data in the session.
-                $this->releaseEditId($context, $recordId);
-                $app->setUserState('com_menus.edit.item.data', null);
-                $app->setUserState('com_menus.edit.item.type', null);
-                $app->setUserState('com_menus.edit.item.link', null);
-
-                // When editing in modal then redirect to modalreturn layout
-                if ($this->input->get('layout') === 'modal') {
-                    $return = 'index.php?option=' . $this->option . '&view=' . $this->view_item . $this->getRedirectToItemAppend($recordId)
-                        . '&layout=modalreturn&from-task=save';
-                } else {
-                    // Redirect to the list screen.
-                    $return = 'index.php?option=' . $this->option . '&view=' . $this->view_list . $this->getRedirectToListAppend()
-                        . '&menutype=' . $app->getUserState('com_menus.items.menutype');
-                }
-
-
-                $this->setRedirect(Route::_($return, false));
-                break;
-        }
-
-        return true;
     }
 
     /**
