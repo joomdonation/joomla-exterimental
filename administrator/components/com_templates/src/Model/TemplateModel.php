@@ -994,7 +994,8 @@ class TemplateModel extends FormModel
         $filePath = Path::clean($fileName);
 
         // Include the extension plugins for the save events.
-        PluginHelper::importPlugin('extension');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('extension', null, true, $dispatcher);
 
         $user = get_current_user();
         chown($filePath, $user);

@@ -126,7 +126,8 @@ class HtmlView extends BaseHtmlView
         }
 
         if (ComponentHelper::getParams('com_content')->get('workflow_enabled')) {
-            PluginHelper::importPlugin('workflow');
+            $dispatcher = $this->getDispatcher();
+            PluginHelper::importPlugin('workflow', null, true, $dispatcher);
 
             $this->transitions = $model->getTransitions();
         }

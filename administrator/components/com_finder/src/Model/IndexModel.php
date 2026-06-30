@@ -392,7 +392,8 @@ class IndexModel extends ListModel
         $db->truncateTable('#__finder_tokens_aggregate');
 
         // Include the finder plugins for the on purge events.
-        PluginHelper::importPlugin('finder');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('finder', null, true, $dispatcher);
         Factory::getApplication()->triggerEvent($this->event_after_purge);
 
         return true;

@@ -39,7 +39,8 @@ class FileModel extends FormModel
      */
     public function getForm($data = [], $loadData = true)
     {
-        PluginHelper::importPlugin('media-action');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('media-action', null, true, $dispatcher);
 
         // Load backend forms in frontend.
         FormHelper::addFormPath(JPATH_ADMINISTRATOR . '/components/com_media/forms');
