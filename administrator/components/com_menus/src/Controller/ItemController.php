@@ -308,49 +308,51 @@ class ItemController extends FormController
      */
     protected function preprocessSaveData(array $data): array
     {
-        /** @var \Joomla\Component\Menus\Administrator\Model\ItemModel $model */
-        $model = $this->getModel('Item', 'Administrator', []);
-        $form  = $model->getForm($data);
+        // For component type menu items, we need to process the request params.
+        // This is done here because the link field needs to be built from the request params
+        // before the standard validation runs in parent save().
+        if ($data['type'] == 'component') {
+            /** @var \Joomla\Component\Menus\Administrator\Model\ItemModel $model */
+            $model = $this->getModel('Item', 'Administrator', []);
+            $form  = $model->getForm($data);
 
-        if (!$form) {
-            throw new \Exception($model->getError(), 500);
-        }
-
-        // Perform early validation to process request params.
-        $validatedData = $model->validate($form, $data);
-
-        // Preprocess request fields to ensure that we remove not set or empty request params.
-        $request = $form->getGroup('request', true);
-
-        // Check for the special 'request' entry for component type menu items.
-        if ($data['type'] == 'component' && !empty($request) && $validatedData !== false) {
-            $removeArgs = [];
-
-            if (!isset($validatedData['request']) || !\is_array($validatedData['request'])) {
-                $validatedData['request'] = [];
+            if (!$form) {
+                throw new \Exception($model->getError(), 500);
             }
 
-            foreach ($request as $field) {
-                $fieldName = $field->getAttribute('name');
+            $request = $form->getGroup('request', true);
 
-                if (!isset($validatedData['request'][$fieldName]) || $validatedData['request'][$fieldName] == '') {
-                    $removeArgs[$fieldName] = '';
+            if (!empty($request)) {
+                $removeArgs = [];
+
+                if (!isset($data['request']) || !\is_array($data['request'])) {
+                    $data['request'] = [];
                 }
+
+                // Determine which request params should be removed (empty ones).
+                foreach ($request as $field) {
+                    $fieldName = $field->getAttribute('name');
+
+                    if (!isset($data['request'][$fieldName]) || $data['request'][$fieldName] == '') {
+                        $removeArgs[$fieldName] = '';
+                    }
+                }
+
+                // Parse the submitted link arguments.
+                $args = [];
+                parse_str(parse_url($data['link'], PHP_URL_QUERY), $args);
+
+                // Merge in the user supplied request arguments.
+                $args = array_merge($args, $data['request']);
+
+                // Remove the unused request params.
+                if (!empty($args) && !empty($removeArgs)) {
+                    $args = array_diff_key($args, $removeArgs);
+                }
+
+                // Rebuild the link with the cleaned params.
+                $data['link'] = 'index.php?' . urldecode(http_build_query($args, '', '&'));
             }
-
-            // Parse the submitted link arguments.
-            $args = [];
-            parse_str(parse_url($validatedData['link'], PHP_URL_QUERY), $args);
-
-            // Merge in the user supplied request arguments.
-            $args = array_merge($args, $validatedData['request']);
-
-            // Remove the unused request params.
-            if (!empty($args) && !empty($removeArgs)) {
-                $args = array_diff_key($args, $removeArgs);
-            }
-
-            $data['link'] = 'index.php?' . urldecode(http_build_query($args, '', '&'));
         }
 
         return $data;

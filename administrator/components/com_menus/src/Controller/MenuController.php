@@ -157,7 +157,7 @@ class MenuController extends FormController
     }
 
     /**
-     * Temporary property to store preset value.
+     * Temporary property to store preset value for use in postSaveHook.
      *
      * @var    string|null
      * @since  6.1.0
@@ -165,7 +165,7 @@ class MenuController extends FormController
     private $preset;
 
     /**
-     * Temporary property to store client ID for preset.
+     * Temporary property to store client ID for preset processing.
      *
      * @var    int
      * @since  6.1.0
