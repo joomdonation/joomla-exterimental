@@ -16,6 +16,8 @@ use Joomla\CMS\Language\Text;
 use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\CMS\Workflow\Workflow;
 use Joomla\Database\DatabaseDriver;
+use Joomla\Event\DispatcherAwareInterface;
+use Joomla\Event\DispatcherInterface;
 use Joomla\Filesystem\Path;
 
 // phpcs:disable PSR1.Files.SideEffects
@@ -318,7 +320,13 @@ trait WorkflowBehaviorTrait
      */
     protected function importWorkflowPlugins()
     {
-        PluginHelper::importPlugin('workflow');
+        if ($this instanceof DispatcherAwareInterface) {
+            $dispatcher = $this->getDispatcher();
+        } else {
+            $dispatcher = Factory::getContainer()->get(DispatcherInterface::class);
+        }
+
+        PluginHelper::importPlugin('workflow', null, true, $dispatcher);
     }
 
     /**
