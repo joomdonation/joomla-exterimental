@@ -31,6 +31,7 @@ use Joomla\CMS\Tag\TagServiceTrait;
 use Joomla\CMS\User\UserFactoryInterface;
 use Joomla\Component\Contact\Administrator\Service\HTML\AdministratorService;
 use Joomla\Component\Contact\Administrator\Service\HTML\Icon;
+use Joomla\Database\DatabaseInterface;
 use Psr\Container\ContainerInterface;
 
 // phpcs:disable PSR1.Files.SideEffects
@@ -76,7 +77,9 @@ class ContactComponent extends MVCComponent implements
      */
     public function boot(ContainerInterface $container)
     {
-        $this->getRegistry()->register('contactadministrator', new AdministratorService());
+        $contactAdministrator = new AdministratorService();
+        $contactAdministrator->setDatabase($container->get(DatabaseInterface::class));
+        $this->getRegistry()->register('contactadministrator', $contactAdministrator);
         $this->getRegistry()->register('contacticon', new Icon($container->get(UserFactoryInterface::class)));
     }
 

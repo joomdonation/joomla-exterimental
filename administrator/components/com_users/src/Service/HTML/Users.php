@@ -16,6 +16,9 @@ use Joomla\CMS\Language\LanguageHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Router\Route;
 use Joomla\CMS\Uri\Uri;
+use Joomla\Database\DatabaseAwareTrait;
+use Joomla\Database\DatabaseInterface;
+use Joomla\Database\Exception\DatabaseNotFoundException;
 use Joomla\Database\ParameterType;
 use Joomla\Filesystem\Path;
 
@@ -30,6 +33,7 @@ use Joomla\Filesystem\Path;
  */
 class Users
 {
+    use DatabaseAwareTrait;
     /**
      * Display an image.
      *
@@ -298,7 +302,13 @@ class Users
             return static::value($value);
         }
 
-        $db    = Factory::getDbo();
+        try {
+            $db = $this->getDatabase();
+        } catch (DatabaseNotFoundException) {
+            @trigger_error('Database must be set, this will not be caught anymore in 8.0', E_USER_DEPRECATED);
+            $db = Factory::getContainer()->get(DatabaseInterface::class);
+        }
+
         $query = $db->createQuery()
             ->select($db->quoteName('title'))
             ->from($db->quoteName('#__template_styles'))
@@ -401,7 +411,13 @@ class Users
             return static::value($value);
         }
 
-        $db    = Factory::getDbo();
+        try {
+            $db = $this->getDatabase();
+        } catch (DatabaseNotFoundException) {
+            @trigger_error('Database must be set, this will not be caught anymore in 8.0', E_USER_DEPRECATED);
+            $db = Factory::getContainer()->get(DatabaseInterface::class);
+        }
+
         $lang  = Factory::getLanguage();
         $query = $db->createQuery()
             ->select($db->quoteName('name'))

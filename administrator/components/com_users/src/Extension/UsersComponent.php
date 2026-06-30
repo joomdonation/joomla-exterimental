@@ -19,6 +19,7 @@ use Joomla\CMS\Fields\FieldsFormServiceInterface;
 use Joomla\CMS\Fields\FieldsServiceTrait;
 use Joomla\CMS\HTML\HTMLRegistryAwareTrait;
 use Joomla\Component\Users\Administrator\Service\HTML\Users;
+use Joomla\Database\DatabaseInterface;
 use Psr\Container\ContainerInterface;
 
 // phpcs:disable PSR1.Files.SideEffects
@@ -51,7 +52,9 @@ class UsersComponent extends MVCComponent implements BootableExtensionInterface,
      */
     public function boot(ContainerInterface $container)
     {
-        $this->getRegistry()->register('users', new Users());
+        $users = new Users();
+        $users->setDatabase($container->get(DatabaseInterface::class));
+        $this->getRegistry()->register('users', $users);
     }
 
     /**
