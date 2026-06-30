@@ -89,8 +89,10 @@ class FilterController extends FormController
         $validData['data'] = ArrayHelper::toInteger($validData['data']);
 
         // Remove any values of zero.
-        if (array_search(0, $validData['data'], true) !== false) {
-            unset($validData['data'][array_search(0, $validData['data'], true)]);
+        $zeroIndex = array_search(0, $validData['data'], true);
+
+        if ($zeroIndex !== false) {
+            unset($validData['data'][$zeroIndex]);
         }
 
         return $validData;

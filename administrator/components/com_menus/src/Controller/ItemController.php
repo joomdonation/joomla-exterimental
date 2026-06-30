@@ -282,7 +282,7 @@ class ItemController extends FormController
                 ];
 
                 if (!\in_array($protocol, $scheme)) {
-                    $recordId = $this->input->getInt($key ?? 'id');
+                    $recordId = $this->input->getInt('id');
                     $this->app->enqueueMessage(Text::_('JLIB_APPLICATION_ERROR_SAVE_NOT_PERMITTED'), 'warning');
                     $this->setRedirect(
                         Route::_('index.php?option=' . $this->option . '&view=' . $this->view_item . $this->getRedirectToItemAppend($recordId), false)
@@ -310,7 +310,7 @@ class ItemController extends FormController
     {
         /** @var \Joomla\Component\Menus\Administrator\Model\ItemModel $model */
         $model = $this->getModel('Item', 'Administrator', []);
-        $form  = $model->getForm($data, false);
+        $form  = $model->getForm($data);
 
         if (!$form) {
             throw new \Exception($model->getError(), 500);
@@ -322,8 +322,8 @@ class ItemController extends FormController
         // Preprocess request fields to ensure that we remove not set or empty request params.
         $request = $form->getGroup('request', true);
 
-        // Check for the special 'request' entry.
-        if ($data['type'] == 'component' && !empty($request)) {
+        // Check for the special 'request' entry for component type menu items.
+        if ($data['type'] == 'component' && !empty($request) && $validatedData !== false) {
             $removeArgs = [];
 
             if (!isset($validatedData['request']) || !\is_array($validatedData['request'])) {
@@ -350,11 +350,10 @@ class ItemController extends FormController
                 $args = array_diff_key($args, $removeArgs);
             }
 
-            $validatedData['link'] = 'index.php?' . urldecode(http_build_query($args, '', '&'));
+            $data['link'] = 'index.php?' . urldecode(http_build_query($args, '', '&'));
         }
 
-        // Return the preprocessed data merged with original data.
-        return array_merge($data, $validatedData);
+        return $data;
     }
 
     /**
