@@ -20,6 +20,15 @@ namespace Joomla\CMS\Event\Module;
  */
 abstract class ModuleListEvent extends ModuleEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['modules'];
+
     /**
      * The argument names, in order expected by legacy plugins.
      *
@@ -46,9 +55,6 @@ abstract class ModuleListEvent extends ModuleEvent
         $this->arguments['subject'] ??= new \stdClass();
 
         parent::__construct($name, $arguments);
-
-        if (!\array_key_exists('modules', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'modules' of event {$name} is required but has not been provided");
         }
 
         // For backward compatibility make sure the content is referenced

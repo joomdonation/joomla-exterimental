@@ -20,6 +20,15 @@ namespace Joomla\CMS\Event\User;
  */
 abstract class AbstractSaveEvent extends UserEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['subject', 'isNew'];
+
     /**
      * The argument names, in order expected by legacy plugins.
      *
@@ -43,10 +52,6 @@ abstract class AbstractSaveEvent extends UserEvent
     public function __construct($name, array $arguments = [])
     {
         parent::__construct($name, $arguments);
-
-        if (!\array_key_exists('isNew', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'isNew' of event {$name} is required but has not been provided");
-        }
     }
 
     /**

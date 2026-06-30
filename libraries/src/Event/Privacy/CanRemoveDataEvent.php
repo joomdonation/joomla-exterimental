@@ -28,6 +28,15 @@ use Joomla\Component\Privacy\Administrator\Table\RequestTable;
  */
 class CanRemoveDataEvent extends PrivacyEvent implements ResultAwareInterface
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['subject', 'user'];
+
     use ResultAware;
 
     /**
@@ -53,14 +62,7 @@ class CanRemoveDataEvent extends PrivacyEvent implements ResultAwareInterface
     public function __construct($name, array $arguments = [])
     {
         parent::__construct($name, $arguments);
-
-        if (!\array_key_exists('subject', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'subject' of event {$name} is required but has not been provided");
-        }
-
-        if (!\array_key_exists('user', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'user' of event {$name} is required but has not been provided");
-        }
+    }
     }
 
     /**

@@ -24,6 +24,15 @@ use Joomla\CMS\MVC\Model\BaseModel;
  */
 abstract class InstallerEvent extends AbstractImmutableEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['subject', 'package'];
+
     use ReshapeArgumentsAware;
 
     /**
@@ -54,14 +63,7 @@ abstract class InstallerEvent extends AbstractImmutableEvent
             parent::__construct($name, $this->reshapeArguments($arguments, $this->legacyArgumentsOrder));
         } else {
             parent::__construct($name, $arguments);
-        }
-
-        if (!\array_key_exists('subject', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'subject' of event {$name} is required but has not been provided");
-        }
-
-        if (!\array_key_exists('package', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'package' of event {$name} is required but has not been provided");
+    }
         }
 
         // For backward compatibility make sure the package is referenced

@@ -54,4 +54,3 @@ abstract class PrivacyEvent extends AbstractImmutableEvent
 
         parent::__construct($name, $arguments);
     }
-}

@@ -28,6 +28,15 @@ use Joomla\CMS\Event\Result\ResultTypeArrayAware;
  */
 class GetStatsDataEvent extends AbstractImmutableEvent implements ResultAwareInterface
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['context'];
+
     use ReshapeArgumentsAware;
     use ResultAware;
     use ResultTypeArrayAware;
@@ -60,10 +69,6 @@ class GetStatsDataEvent extends AbstractImmutableEvent implements ResultAwareInt
         }
 
         parent::__construct($name, $arguments);
-
-        if (!\array_key_exists('context', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'context' of event {$name} is required but has not been provided");
-        }
     }
 
     /**

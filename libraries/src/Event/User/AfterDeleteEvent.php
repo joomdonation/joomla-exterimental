@@ -22,6 +22,15 @@ namespace Joomla\CMS\Event\User;
  */
 class AfterDeleteEvent extends AbstractDeleteEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['subject', 'deletingResult'];
+
     /**
      * The argument names, in order expected by legacy plugins.
      *
@@ -45,10 +54,6 @@ class AfterDeleteEvent extends AbstractDeleteEvent
     public function __construct($name, array $arguments = [])
     {
         parent::__construct($name, $arguments);
-
-        if (!\array_key_exists('deletingResult', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'deletingResult' of event {$name} is required but has not been provided");
-        }
     }
 
     /**

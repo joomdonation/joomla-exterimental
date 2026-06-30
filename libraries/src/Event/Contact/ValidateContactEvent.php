@@ -26,6 +26,15 @@ use Joomla\CMS\Event\Result\ResultTypeMixedAware;
  */
 class ValidateContactEvent extends AbstractImmutableEvent implements ResultAwareInterface
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['subject', 'data'];
+
     use ResultAware;
     use ResultTypeMixedAware;
     use ReshapeArgumentsAware;
@@ -57,14 +66,7 @@ class ValidateContactEvent extends AbstractImmutableEvent implements ResultAware
             parent::__construct($name, $this->reshapeArguments($arguments, $this->legacyArgumentsOrder));
         } else {
             parent::__construct($name, $arguments);
-        }
-
-        if (!\array_key_exists('subject', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'subject' of event {$name} is required but has not been provided");
-        }
-
-        if (!\array_key_exists('data', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'data' of event {$name} is required but has not been provided");
+    }
         }
 
         // For backward compatibility make sure the content is referenced

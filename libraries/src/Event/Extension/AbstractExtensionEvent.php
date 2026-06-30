@@ -54,4 +54,3 @@ abstract class AbstractExtensionEvent extends AbstractImmutableEvent
 
         parent::__construct($name, $arguments);
     }
-}

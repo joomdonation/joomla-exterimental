@@ -23,6 +23,14 @@ use Joomla\CMS\Router\ApiRouter;
 class BeforeApiRouteEvent extends ApplicationEvent
 {
     /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['subject', 'router'];
+
+    /**
      * Constructor.
      *
      * @param   string  $name       The event name.
@@ -34,10 +42,6 @@ class BeforeApiRouteEvent extends ApplicationEvent
      */
     public function __construct($name, array $arguments = [])
     {
-        if (!\array_key_exists('router', $arguments)) {
-            throw new \BadMethodCallException("Argument 'router' of event {$name} is required but has not been provided");
-        }
-
         parent::__construct($name, $arguments);
     }
 

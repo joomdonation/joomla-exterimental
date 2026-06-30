@@ -41,6 +41,14 @@ abstract class AbstractEvent extends Event
     use CoreEventAware;
 
     /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = [];
+
+    /**
      * Creates a new CMS event object for a given event name and subject. The following arguments must be given:
      * subject      object  The subject of the event. This is the core object you are going to manipulate.
      * eventClass   string  The Event class name. If you do not provide it Joomla\CMS\Events\<eventNameWithoutOnPrefix>
@@ -106,10 +114,18 @@ abstract class AbstractEvent extends Event
      * @param   array   $arguments  The event arguments.
      *
      * @since   4.0.0
+     * @throws  \BadMethodCallException
      */
     public function __construct(string $name, array $arguments = [])
     {
         parent::__construct($name, $arguments);
+
+        // Validate required arguments
+        foreach ($this->requiredArguments as $requiredArgument) {
+            if (!\array_key_exists($requiredArgument, $arguments)) {
+                throw new \BadMethodCallException("Argument '{$requiredArgument}' of event {$name} is required but has not been provided");
+            }
+        }
 
         foreach ($arguments as $argumentName => $value) {
             $this->setArgument($argumentName, $value);

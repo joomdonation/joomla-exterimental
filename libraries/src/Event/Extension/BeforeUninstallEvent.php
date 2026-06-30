@@ -20,6 +20,15 @@ namespace Joomla\CMS\Event\Extension;
  */
 class BeforeUninstallEvent extends AbstractExtensionEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['eid'];
+
     /**
      * The argument names, in order expected by legacy plugins.
      *
@@ -43,10 +52,6 @@ class BeforeUninstallEvent extends AbstractExtensionEvent
     public function __construct($name, array $arguments = [])
     {
         parent::__construct($name, $arguments);
-
-        if (!\array_key_exists('eid', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'eid' of event {$name} is required but has not been provided");
-        }
     }
 
     /**

@@ -40,4 +40,3 @@ class AfterDeleteEvent extends AbstractEvent
 
         parent::__construct($name, $arguments);
     }
-}

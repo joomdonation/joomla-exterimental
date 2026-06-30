@@ -22,6 +22,15 @@ use Joomla\CMS\Installer\Installer;
  */
 class AfterUninstallEvent extends AbstractExtensionEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['installer', 'eid', 'removed'];
+
     /**
      * The argument names, in order expected by legacy plugins.
      *
@@ -45,17 +54,7 @@ class AfterUninstallEvent extends AbstractExtensionEvent
     public function __construct($name, array $arguments = [])
     {
         parent::__construct($name, $arguments);
-
-        if (!\array_key_exists('installer', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'method' of event {$name} is required but has not been provided");
-        }
-
-        if (!\array_key_exists('eid', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'eid' of event {$name} is required but has not been provided");
-        }
-
-        if (!\array_key_exists('removed', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'removed' of event {$name} is required but has not been provided");
+    }
         }
     }
 

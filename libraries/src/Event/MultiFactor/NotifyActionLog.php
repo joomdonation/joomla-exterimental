@@ -57,4 +57,3 @@ class NotifyActionLog extends AbstractImmutableEvent
 
         parent::__construct($name, $arguments);
     }
-}

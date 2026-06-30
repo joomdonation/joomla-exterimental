@@ -20,6 +20,15 @@ namespace Joomla\CMS\Event\Extension;
  */
 class BeforeUpdateEvent extends AbstractExtensionEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['type', 'manifest'];
+
     /**
      * The argument names, in order expected by legacy plugins.
      *
@@ -43,14 +52,7 @@ class BeforeUpdateEvent extends AbstractExtensionEvent
     public function __construct($name, array $arguments = [])
     {
         parent::__construct($name, $arguments);
-
-        if (!\array_key_exists('type', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'type' of event {$name} is required but has not been provided");
-        }
-
-        if (!\array_key_exists('manifest', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'manifest' of event {$name} is required but has not been provided");
-        }
+    }
     }
 
     /**

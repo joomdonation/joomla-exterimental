@@ -23,6 +23,14 @@ use Joomla\CMS\Document\Document;
 abstract class ApplicationDocumentEvent extends ApplicationEvent
 {
     /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['subject', 'document'];
+
+    /**
      * Constructor.
      *
      * @param   string  $name       The event name.
@@ -34,10 +42,6 @@ abstract class ApplicationDocumentEvent extends ApplicationEvent
      */
     public function __construct($name, array $arguments = [])
     {
-        if (!\array_key_exists('document', $arguments)) {
-            throw new \BadMethodCallException("Argument 'document' of event {$name} is required but has not been provided");
-        }
-
         parent::__construct($name, $arguments);
     }
 

@@ -22,6 +22,15 @@ namespace Joomla\CMS\Event\Model;
  */
 class PrepareDataEvent extends ModelEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['data'];
+
     /**
      * The argument names, in order expected by legacy plugins.
      *
@@ -48,9 +57,6 @@ class PrepareDataEvent extends ModelEvent
         $this->arguments['subject'] ??= new \stdClass();
 
         parent::__construct($name, $arguments);
-
-        if (!\array_key_exists('data', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'data' of event {$name} is required but has not been provided");
         }
 
         // For backward compatibility make sure the content is referenced

@@ -20,6 +20,15 @@ namespace Joomla\CMS\Event\CustomFields;
  */
 class AfterPrepareFieldEvent extends AbstractPrepareFieldEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['context', 'item', 'value'];
+
     /**
      * The argument names, in order expected by legacy plugins.
      *
@@ -43,9 +52,6 @@ class AfterPrepareFieldEvent extends AbstractPrepareFieldEvent
     public function __construct($name, array $arguments = [])
     {
         parent::__construct($name, $arguments);
-
-        if (!\array_key_exists('value', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'value' of event {$name} is required but has not been provided");
         }
 
         // For backward compatibility make sure the value is referenced

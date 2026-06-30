@@ -40,4 +40,3 @@ class BeforeCheckinEvent extends AbstractEvent
 
         parent::__construct($name, $arguments);
     }
-}
