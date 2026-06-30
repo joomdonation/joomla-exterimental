@@ -16,6 +16,8 @@ use Joomla\CMS\Language\Text;
 use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\CMS\Workflow\Workflow;
 use Joomla\Database\DatabaseDriver;
+use Joomla\Event\DispatcherAwareInterface;
+use Joomla\Event\DispatcherInterface;
 use Joomla\Filesystem\Path;
 
 // phpcs:disable PSR1.Files.SideEffects
