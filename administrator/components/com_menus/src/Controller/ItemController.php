@@ -282,10 +282,9 @@ class ItemController extends FormController
                 ];
 
                 if (!\in_array($protocol, $scheme)) {
-                    $recordId = $this->input->getInt('id');
                     $this->app->enqueueMessage(Text::_('JLIB_APPLICATION_ERROR_SAVE_NOT_PERMITTED'), 'warning');
                     $this->setRedirect(
-                        Route::_('index.php?option=' . $this->option . '&view=' . $this->view_item . $this->getRedirectToItemAppend($recordId), false)
+                        Route::_('index.php?option=' . $this->option . '&view=' . $this->view_item . $this->getRedirectToItemAppend($this->input->getInt('id')), false)
                     );
 
                     return false;

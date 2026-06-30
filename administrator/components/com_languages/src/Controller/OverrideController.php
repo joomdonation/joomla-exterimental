@@ -88,7 +88,7 @@ class OverrideController extends FormController
     protected function preprocessSaveData(array $data): array
     {
         // Populate the id from the request (which may be a string constant name).
-        $data['id'] = $this->input->get('id');
+        $data['id'] = $this->input->get('id', '', 'string');
 
         return $data;
     }

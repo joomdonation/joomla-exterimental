@@ -157,7 +157,7 @@ class MenuController extends FormController
     }
 
     /**
-     * Temporary property to store preset value for use in postSaveHook.
+     * Temporary property to store preset value for use in postSaveHook and setSaveSuccessMessage.
      *
      * @var    string|null
      * @since  6.1.0
