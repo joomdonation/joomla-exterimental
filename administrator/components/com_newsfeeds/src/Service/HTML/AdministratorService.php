@@ -16,6 +16,9 @@ use Joomla\CMS\Language\LanguageHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Layout\LayoutHelper;
 use Joomla\CMS\Router\Route;
+use Joomla\Database\DatabaseAwareTrait;
+use Joomla\Database\DatabaseInterface;
+use Joomla\Database\Exception\DatabaseNotFoundException;
 use Joomla\Database\ParameterType;
 
 // phpcs:disable PSR1.Files.SideEffects
@@ -29,6 +32,7 @@ use Joomla\Database\ParameterType;
  */
 class AdministratorService
 {
+    use DatabaseAwareTrait;
     /**
      * Get the associated language flags
      *
@@ -50,7 +54,13 @@ class AdministratorService
             }
 
             // Get the associated newsfeed items
-            $db    = Factory::getDbo();
+            try {
+                $db = $this->getDatabase();
+            } catch (DatabaseNotFoundException) {
+                @trigger_error('Database must be set, this will not be caught anymore in 8.0', E_USER_DEPRECATED);
+                $db = Factory::getContainer()->get(DatabaseInterface::class);
+            }
+
             $query = $db->createQuery();
             $query
                 ->select(

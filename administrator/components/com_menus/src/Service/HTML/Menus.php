@@ -16,6 +16,9 @@ use Joomla\CMS\Language\Text;
 use Joomla\CMS\Layout\LayoutHelper;
 use Joomla\CMS\Router\Route;
 use Joomla\Component\Menus\Administrator\Helper\MenusHelper;
+use Joomla\Database\DatabaseAwareTrait;
+use Joomla\Database\DatabaseInterface;
+use Joomla\Database\Exception\DatabaseNotFoundException;
 use Joomla\Database\ParameterType;
 use Joomla\Registry\Registry;
 
@@ -32,6 +35,7 @@ use Joomla\Registry\Registry;
  */
 class Menus
 {
+    use DatabaseAwareTrait;
     /**
      * Generate the markup to display the item associations
      *
@@ -51,7 +55,13 @@ class Menus
         // Get the associations
         if ($associations = MenusHelper::getAssociations($itemid)) {
             // Get the associated menu items
-            $db    = Factory::getDbo();
+            try {
+                $db = $this->getDatabase();
+            } catch (DatabaseNotFoundException) {
+                @trigger_error('Database must be set, this will not be caught anymore in 8.0', E_USER_DEPRECATED);
+                $db = Factory::getContainer()->get(DatabaseInterface::class);
+            }
+
             $query = $db->createQuery()
                 ->select(
                     [

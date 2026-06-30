@@ -16,6 +16,7 @@ use Joomla\CMS\Extension\BootableExtensionInterface;
 use Joomla\CMS\Extension\MVCComponent;
 use Joomla\CMS\HTML\HTMLRegistryAwareTrait;
 use Joomla\Component\Menus\Administrator\Service\HTML\Menus;
+use Joomla\Database\DatabaseInterface;
 use Psr\Container\ContainerInterface;
 
 // phpcs:disable PSR1.Files.SideEffects
@@ -49,6 +50,8 @@ class MenusComponent extends MVCComponent implements
      */
     public function boot(ContainerInterface $container)
     {
-        $this->getRegistry()->register('menus', new Menus());
+        $menus = new Menus();
+        $menus->setDatabase($container->get(DatabaseInterface::class));
+        $this->getRegistry()->register('menus', $menus);
     }
 }

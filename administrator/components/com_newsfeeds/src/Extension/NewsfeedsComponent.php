@@ -22,6 +22,7 @@ use Joomla\CMS\HTML\HTMLRegistryAwareTrait;
 use Joomla\CMS\Tag\TagServiceInterface;
 use Joomla\CMS\Tag\TagServiceTrait;
 use Joomla\Component\Newsfeeds\Administrator\Service\HTML\AdministratorService;
+use Joomla\Database\DatabaseInterface;
 use Psr\Container\ContainerInterface;
 
 // phpcs:disable PSR1.Files.SideEffects
@@ -63,7 +64,9 @@ class NewsfeedsComponent extends MVCComponent implements
      */
     public function boot(ContainerInterface $container)
     {
-        $this->getRegistry()->register('newsfeedsadministrator', new AdministratorService());
+        $newsfeedsAdministrator = new AdministratorService();
+        $newsfeedsAdministrator->setDatabase($container->get(DatabaseInterface::class));
+        $this->getRegistry()->register('newsfeedsadministrator', $newsfeedsAdministrator);
     }
 
     /**

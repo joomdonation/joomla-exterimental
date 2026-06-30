@@ -14,6 +14,7 @@ use Joomla\CMS\Extension\BootableExtensionInterface;
 use Joomla\CMS\Extension\MVCComponent;
 use Joomla\CMS\HTML\HTMLRegistryAwareTrait;
 use Joomla\Component\Categories\Administrator\Service\HTML\AdministratorService;
+use Joomla\Database\DatabaseInterface;
 use Psr\Container\ContainerInterface;
 
 // phpcs:disable PSR1.Files.SideEffects
@@ -44,6 +45,8 @@ class CategoriesComponent extends MVCComponent implements BootableExtensionInter
      */
     public function boot(ContainerInterface $container)
     {
-        $this->getRegistry()->register('categoriesadministrator', new AdministratorService());
+        $categoriesAdministrator = new AdministratorService();
+        $categoriesAdministrator->setDatabase($container->get(DatabaseInterface::class));
+        $this->getRegistry()->register('categoriesadministrator', $categoriesAdministrator);
     }
 }
