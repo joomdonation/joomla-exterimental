@@ -744,8 +744,9 @@ class TaskModel extends AdminModel
 
         $context = $this->option . '.' . $this->name;
 
-        // Include the plugins for the change of state event.
-        PluginHelper::importPlugin($this->events_map['unlock']);
+        // Get dispatcher and import plugins for the change of state event.
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin($this->events_map['unlock'], null, true, $dispatcher);
 
         // Access checks.
         foreach ($pks as $i => $pk) {
@@ -784,7 +785,7 @@ class TaskModel extends AdminModel
         );
 
         try {
-            Factory::getApplication()->getDispatcher()->dispatch($this->event_before_unlock, $event);
+            $dispatcher->dispatch($this->event_before_unlock, $event);
         } catch (\RuntimeException $e) {
             $this->setError($e->getMessage());
 
@@ -809,7 +810,7 @@ class TaskModel extends AdminModel
         );
 
         try {
-            Factory::getApplication()->getDispatcher()->dispatch($this->event_unlock, $event);
+            $dispatcher->dispatch($this->event_unlock, $event);
         } catch (\RuntimeException $e) {
             $this->setError($e->getMessage());
 
@@ -865,7 +866,8 @@ class TaskModel extends AdminModel
     protected function preprocessForm(Form $form, $data, $group = 'content'): void
     {
         // Load the 'task' plugin group
-        PluginHelper::importPlugin('task');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('task', null, true, $dispatcher);
 
         // Let the parent method take over
         parent::preprocessForm($form, $data, $group);

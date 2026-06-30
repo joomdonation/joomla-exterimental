@@ -190,13 +190,14 @@ class ResetModel extends FormModel implements UserFactoryAwareInterface, MailerF
         // Get the user object.
         $user = $this->getUserFactory()->loadUserById($userId);
 
+        $dispatcher = $this->getDispatcher();
         $event = AbstractEvent::create(
             'onUserBeforeResetComplete',
             [
                 'subject' => $user,
             ]
         );
-        $app->getDispatcher()->dispatch($event->getName(), $event);
+        $dispatcher->dispatch($event->getName(), $event);
 
         // Check for a user and that the tokens match.
         if (empty($user) || $user->activation !== $token) {
@@ -246,7 +247,7 @@ class ResetModel extends FormModel implements UserFactoryAwareInterface, MailerF
                 'subject' => $user,
             ]
         );
-        $app->getDispatcher()->dispatch($event->getName(), $event);
+        $dispatcher->dispatch($event->getName(), $event);
 
         return true;
     }
@@ -442,13 +443,14 @@ class ResetModel extends FormModel implements UserFactoryAwareInterface, MailerF
 
         $user->activation = $hashedToken;
 
+        $dispatcher = $this->getDispatcher();
         $event = AbstractEvent::create(
             'onUserBeforeResetRequest',
             [
                 'subject' => $user,
             ]
         );
-        $app->getDispatcher()->dispatch($event->getName(), $event);
+        $dispatcher->dispatch($event->getName(), $event);
 
         // Save the user to the database.
         if (!$user->save(true)) {
@@ -501,7 +503,7 @@ class ResetModel extends FormModel implements UserFactoryAwareInterface, MailerF
                 'subject' => $user,
             ]
         );
-        $app->getDispatcher()->dispatch($event->getName(), $event);
+        $dispatcher->dispatch($event->getName(), $event);
 
         return true;
     }
