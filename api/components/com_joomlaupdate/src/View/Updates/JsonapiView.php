@@ -124,7 +124,8 @@ class JsonapiView extends BaseApiView
 
         try {
             // Load actionlog plugins.
-            PluginHelper::importPlugin('actionlog');
+            $dispatcher = $this->getDispatcher();
+            PluginHelper::importPlugin('actionlog', null, true, $dispatcher);
 
             // Perform the cleanup action
             $model->cleanUp();

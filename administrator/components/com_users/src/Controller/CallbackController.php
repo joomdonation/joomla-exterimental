@@ -65,10 +65,11 @@ class CallbackController extends BaseController
             throw new \RuntimeException(Text::_('JERROR_ALERTNOAUTHOR'), 403);
         }
 
-        PluginHelper::importPlugin('multifactorauth');
+        $dispatcher = $this->getDispatcher();
+        PluginHelper::importPlugin('multifactorauth', null, true, $dispatcher);
 
         $event = new Callback($method);
-        $this->app->getDispatcher()->dispatch($event->getName(), $event);
+        $dispatcher->dispatch($event->getName(), $event);
 
         /**
          * The first plugin to handle the request should either redirect or close the application. If we are still here
