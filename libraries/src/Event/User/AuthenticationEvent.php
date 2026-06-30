@@ -25,6 +25,15 @@ use Joomla\CMS\Authentication\AuthenticationResponse;
  */
 class AuthenticationEvent extends UserEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['credentials'];
+
     /**
      * The argument names, in order expected by legacy plugins.
      *
@@ -48,10 +57,6 @@ class AuthenticationEvent extends UserEvent
     public function __construct($name, array $arguments = [])
     {
         parent::__construct($name, $arguments);
-
-        if (!\array_key_exists('credentials', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'credentials' of event {$name} is required but has not been provided");
-        }
     }
 
     /**

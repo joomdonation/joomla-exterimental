@@ -36,6 +36,14 @@ abstract class ModuleEvent extends AbstractImmutableEvent
     protected $legacyArgumentsOrder = [];
 
     /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['subject'];
+
+    /**
      * Constructor.
      *
      * @param   string  $name       The event name.
@@ -53,9 +61,4 @@ abstract class ModuleEvent extends AbstractImmutableEvent
         }
 
         parent::__construct($name, $arguments);
-
-        if (!\array_key_exists('subject', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'subject' of event {$name} is required but has not been provided");
-        }
     }
-}

@@ -20,6 +20,15 @@ namespace Joomla\CMS\Event\Application;
  */
 class DaemonReceiveSignalEvent extends ApplicationEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['subject', 'signal'];
+
     /**
      * Constructor.
      *
@@ -32,10 +41,6 @@ class DaemonReceiveSignalEvent extends ApplicationEvent
      */
     public function __construct($name, array $arguments = [])
     {
-        if (!\array_key_exists('signal', $arguments)) {
-            throw new \BadMethodCallException("Argument 'signal' of event {$name} is required but has not been provided");
-        }
-
         parent::__construct($name, $arguments);
     }
 

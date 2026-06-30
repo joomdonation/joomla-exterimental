@@ -24,6 +24,15 @@ use Joomla\CMS\Form\Form;
  */
 abstract class FormEvent extends AbstractImmutableEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['context', 'subject', 'data'];
+
     use ReshapeArgumentsAware;
 
     /**
@@ -54,14 +63,7 @@ abstract class FormEvent extends AbstractImmutableEvent
         }
 
         parent::__construct($name, $arguments);
-
-        if (!\array_key_exists('subject', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'subject' of event {$name} is required but has not been provided");
-        }
-
-        if (!\array_key_exists('data', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'data' of event {$name} is required but has not been provided");
-        }
+    }
     }
 
     /**

@@ -22,6 +22,15 @@ namespace Joomla\CMS\Event\Module;
  */
 class AfterRenderModulesEvent extends ModuleEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['content', 'attributes'];
+
     /**
      * The argument names, in order expected by legacy plugins.
      *
@@ -48,14 +57,7 @@ class AfterRenderModulesEvent extends ModuleEvent
         $this->arguments['subject'] ??= new \stdClass();
 
         parent::__construct($name, $arguments);
-
-        if (!\array_key_exists('content', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'content' of event {$name} is required but has not been provided");
-        }
-
-        if (!\array_key_exists('attributes', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'attributes' of event {$name} is required but has not been provided");
-        }
+    }
 
         // For backward compatibility make sure the content is referenced
         // @todo: Remove in Joomla 7

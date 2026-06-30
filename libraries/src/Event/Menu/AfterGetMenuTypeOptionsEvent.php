@@ -24,6 +24,15 @@ use Joomla\CMS\MVC\Model\BaseModel;
  */
 class AfterGetMenuTypeOptionsEvent extends AbstractImmutableEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['items', 'subject'];
+
     use ReshapeArgumentsAware;
 
     /**
@@ -53,14 +62,7 @@ class AfterGetMenuTypeOptionsEvent extends AbstractImmutableEvent
             parent::__construct($name, $this->reshapeArguments($arguments, $this->legacyArgumentsOrder));
         } else {
             parent::__construct($name, $arguments);
-        }
-
-        if (!\array_key_exists('items', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'items' of event {$name} is required but has not been provided");
-        }
-
-        if (!\array_key_exists('subject', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'subject' of event {$name} is required but has not been provided");
+    }
         }
 
         // For backward compatibility make sure the content is referenced

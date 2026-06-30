@@ -23,6 +23,14 @@ use Joomla\CMS\Event\AbstractImmutableEvent;
 abstract class AbstractEvent extends AbstractImmutableEvent
 {
     /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['subject'];
+
+    /**
      * Constructor.
      *
      * @param   string  $name       The event name.
@@ -34,10 +42,5 @@ abstract class AbstractEvent extends AbstractImmutableEvent
      */
     public function __construct($name, array $arguments = [])
     {
-        if (!\array_key_exists('subject', $arguments)) {
-            throw new \BadMethodCallException("Argument 'subject' of event {$this->name} is required but has not been provided");
-        }
-
         parent::__construct($name, $arguments);
     }
-}

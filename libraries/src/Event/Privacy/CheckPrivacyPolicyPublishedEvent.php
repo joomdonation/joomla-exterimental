@@ -22,6 +22,15 @@ namespace Joomla\CMS\Event\Privacy;
  */
 class CheckPrivacyPolicyPublishedEvent extends PrivacyEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['subject'];
+
     /**
      * The argument names, in order expected by legacy plugins.
      *
@@ -45,9 +54,6 @@ class CheckPrivacyPolicyPublishedEvent extends PrivacyEvent
     public function __construct($name, array $arguments = [])
     {
         parent::__construct($name, $arguments);
-
-        if (!\array_key_exists('subject', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'subject' of event {$name} is required but has not been provided");
         }
 
         // For backward compatibility make sure the content is referenced
@@ -71,8 +77,7 @@ class CheckPrivacyPolicyPublishedEvent extends PrivacyEvent
      */
     protected function onSetSubject(array $value): array
     {
-        if (!\array_key_exists('published', $value) || !\array_key_exists('articlePublished', $value) || !\array_key_exists('editLink', $value)) {
-            throw new \UnexpectedValueException("Argument 'subject' of event {$this->name} is not of the expected type");
+is not of the expected type");
         }
 
         return $value;

@@ -25,6 +25,15 @@ use Joomla\Component\Privacy\Administrator\Table\RequestTable;
  */
 class RemoveDataEvent extends PrivacyEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['subject', 'user'];
+
     /**
      * The argument names, in order expected by legacy plugins.
      *
@@ -48,14 +57,7 @@ class RemoveDataEvent extends PrivacyEvent
     public function __construct($name, array $arguments = [])
     {
         parent::__construct($name, $arguments);
-
-        if (!\array_key_exists('subject', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'subject' of event {$name} is required but has not been provided");
-        }
-
-        if (!\array_key_exists('user', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'user' of event {$name} is required but has not been provided");
-        }
+    }
     }
 
     /**

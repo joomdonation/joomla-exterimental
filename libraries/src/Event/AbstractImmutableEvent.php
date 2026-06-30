@@ -48,6 +48,12 @@ class AbstractImmutableEvent extends AbstractEvent
 
         $this->constructed = true;
 
+        // Validate required arguments before calling parent constructor
+        foreach ($this->requiredArguments as $requiredArgument) {
+            if (!\array_key_exists($requiredArgument, $arguments)) {
+            }
+        }
+
         parent::__construct($name, $arguments);
     }
 

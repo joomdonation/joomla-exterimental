@@ -23,6 +23,15 @@ use Joomla\CMS\MVC\View\ViewInterface;
  */
 class DisplayEvent extends AbstractImmutableEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['subject'];
+
     /**
      * Constructor.
      *
@@ -36,7 +45,6 @@ class DisplayEvent extends AbstractImmutableEvent
     public function __construct($name, array $arguments = [])
     {
         if (!isset($arguments['subject'])) {
-            throw new \BadMethodCallException("Argument 'subject' of event {$this->name} is required but has not been provided");
         }
 
         if (!($arguments['subject'] instanceof ViewInterface)) {
@@ -44,7 +52,6 @@ class DisplayEvent extends AbstractImmutableEvent
         }
 
         if (!isset($arguments['extension'])) {
-            throw new \BadMethodCallException("Argument 'extension' of event {$this->name} is required but has not been provided");
         }
 
         if (!isset($arguments['extension']) || !\is_string($arguments['extension'])) {
@@ -54,14 +61,5 @@ class DisplayEvent extends AbstractImmutableEvent
         if (!str_contains($arguments['extension'], '.')) {
             throw new \BadMethodCallException("Argument 'extension' of event {$this->name} has wrong format. Valid format: 'component.section'");
         }
-
-        if (!\array_key_exists('extensionName', $arguments) || !\array_key_exists('section', $arguments)) {
-            $parts = explode('.', $arguments['extension']);
-
-            $arguments['extensionName'] ??= $parts[0];
-            $arguments['section']       ??= $parts[1];
-        }
-
-        parent::__construct($name, $arguments);
+parent::__construct($name, $arguments);
     }
-}

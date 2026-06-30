@@ -20,6 +20,15 @@ namespace Joomla\CMS\Event\CustomFields;
  */
 abstract class AbstractPrepareFieldEvent extends CustomFieldsEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['context', 'item'];
+
     /**
      * The argument names, in order expected by legacy plugins.
      *
@@ -43,14 +52,7 @@ abstract class AbstractPrepareFieldEvent extends CustomFieldsEvent
     public function __construct($name, array $arguments = [])
     {
         parent::__construct($name, $arguments);
-
-        if (!\array_key_exists('context', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'context' of event {$name} is required but has not been provided");
-        }
-
-        if (!\array_key_exists('item', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'item' of event {$name} is required but has not been provided");
-        }
+    }
     }
 
     /**

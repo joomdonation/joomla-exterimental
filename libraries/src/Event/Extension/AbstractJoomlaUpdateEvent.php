@@ -52,4 +52,3 @@ abstract class AbstractJoomlaUpdateEvent extends AbstractImmutableEvent
 
         parent::__construct($name, $arguments);
     }
-}

@@ -22,6 +22,15 @@ use Joomla\CMS\Form\Form;
  */
 class PrepareDomEvent extends CustomFieldsEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['fieldset', 'form'];
+
     /**
      * The argument names, in order expected by legacy plugins.
      *
@@ -45,14 +54,7 @@ class PrepareDomEvent extends CustomFieldsEvent
     public function __construct($name, array $arguments = [])
     {
         parent::__construct($name, $arguments);
-
-        if (!\array_key_exists('fieldset', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'fieldset' of event {$name} is required but has not been provided");
-        }
-
-        if (!\array_key_exists('form', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'form' of event {$name} is required but has not been provided");
-        }
+    }
     }
 
     /**

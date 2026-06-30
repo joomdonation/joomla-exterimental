@@ -19,6 +19,15 @@ use Joomla\CMS\Event\AbstractImmutableEvent;
  */
 final class EditorSetupEvent extends AbstractImmutableEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['subject'];
+
     /**
      * Constructor.
      *
@@ -31,10 +40,6 @@ final class EditorSetupEvent extends AbstractImmutableEvent
      */
     public function __construct($name, array $arguments = [])
     {
-        if (!\array_key_exists('subject', $arguments)) {
-            throw new \BadMethodCallException("Argument 'subject' of event {$name} is required but has not been provided");
-        }
-
         parent::__construct($name, $arguments);
     }
 

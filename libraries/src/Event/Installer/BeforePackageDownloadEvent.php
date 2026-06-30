@@ -23,6 +23,15 @@ use Joomla\CMS\Event\ReshapeArgumentsAware;
  */
 class BeforePackageDownloadEvent extends AbstractImmutableEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['url', 'headers'];
+
     use ReshapeArgumentsAware;
 
     /**
@@ -53,14 +62,7 @@ class BeforePackageDownloadEvent extends AbstractImmutableEvent
             parent::__construct($name, $this->reshapeArguments($arguments, $this->legacyArgumentsOrder));
         } else {
             parent::__construct($name, $arguments);
-        }
-
-        if (!\array_key_exists('url', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'url' of event {$name} is required but has not been provided");
-        }
-
-        if (!\array_key_exists('headers', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'headers' of event {$name} is required but has not been provided");
+    }
         }
 
         // For backward compatibility make sure the value is referenced

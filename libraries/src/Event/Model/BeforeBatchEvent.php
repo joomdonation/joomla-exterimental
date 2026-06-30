@@ -23,6 +23,14 @@ use Joomla\CMS\Event\AbstractImmutableEvent;
 class BeforeBatchEvent extends AbstractImmutableEvent
 {
     /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['src', 'type'];
+
+    /**
      * Constructor.
      *
      * @param   string  $name       The event name.
@@ -34,14 +42,5 @@ class BeforeBatchEvent extends AbstractImmutableEvent
      */
     public function __construct($name, array $arguments = [])
     {
-        if (!\array_key_exists('src', $arguments)) {
-            throw new \BadMethodCallException("Argument 'src' is required for event $name");
-        }
-
-        if (!\array_key_exists('type', $arguments)) {
-            throw new \BadMethodCallException("Argument 'type' is required for event $name");
-        }
-
         parent::__construct($name, $arguments);
     }
-}

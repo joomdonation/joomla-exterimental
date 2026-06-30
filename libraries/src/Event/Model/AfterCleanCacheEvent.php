@@ -23,6 +23,15 @@ use Joomla\CMS\Event\ReshapeArgumentsAware;
  */
 class AfterCleanCacheEvent extends AbstractImmutableEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['defaultgroup', 'cachebase', 'result'];
+
     use ReshapeArgumentsAware;
 
     /**
@@ -53,17 +62,7 @@ class AfterCleanCacheEvent extends AbstractImmutableEvent
         }
 
         parent::__construct($name, $arguments);
-
-        if (!\array_key_exists('defaultgroup', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'defaultgroup' of event {$name} is required but has not been provided");
-        }
-
-        if (!\array_key_exists('cachebase', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'cachebase' of event {$name} is required but has not been provided");
-        }
-
-        if (!\array_key_exists('result', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'result' of event {$name} is required but has not been provided");
+    }
         }
     }
 

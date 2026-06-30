@@ -22,6 +22,15 @@ use Joomla\CMS\Installer\Installer as ExtensionInstaller;
  */
 class AfterInstallerEvent extends InstallerEvent
 {
+
+    /**
+     * The names of event arguments that are required.
+     *
+     * @var    array
+     * @since  __DEPLOY_VERSION__
+     */
+    protected $requiredArguments = ['installer', 'installerResult', 'message'];
+
     /**
      * The argument names, in order expected by legacy plugins.
      *
@@ -45,17 +54,7 @@ class AfterInstallerEvent extends InstallerEvent
     public function __construct($name, array $arguments = [])
     {
         parent::__construct($name, $arguments);
-
-        if (!\array_key_exists('installer', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'installer' of event {$name} is required but has not been provided");
-        }
-
-        if (!\array_key_exists('installerResult', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'installerResult' of event {$name} is required but has not been provided");
-        }
-
-        if (!\array_key_exists('message', $this->arguments)) {
-            throw new \BadMethodCallException("Argument 'message' of event {$name} is required but has not been provided");
+    }
         }
 
         // For backward compatibility make sure the values is referenced
